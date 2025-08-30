@@ -1,7 +1,12 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
-import { Text, Surface, Chip } from 'react-native-paper';
-import { Match } from '../types';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
+import { Text } from 'react-native-paper';
+import { Match } from './types';
+import { colors, spacing, borderRadius, typography } from '../theme/colors';
 
 interface MatchCardProps {
   match: Match;
@@ -11,38 +16,37 @@ interface MatchCardProps {
 const MatchCard: React.FC<MatchCardProps> = ({ match, onPress }) => {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('ru-RU', {
+    return date.toLocaleString('ru-RU', {
       day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
+      month: 'short',
       hour: '2-digit',
       minute: '2-digit',
     });
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusStyle = (status: string) => {
     switch (status) {
       case 'live':
-        return '#ef4444';
+        return styles.statusLive;
       case 'finished':
-        return '#22c55e';
+        return styles.statusFinished;
       case 'upcoming':
-        return '#3b82f6';
+        return styles.statusUpcoming;
       case 'cancelled':
-        return '#666666';
+        return styles.statusCancelled;
       default:
-        return '#666666';
+        return styles.statusDefault;
     }
   };
 
-  const getStatusLabel = (status: string) => {
+  const getStatusText = (status: string) => {
     switch (status) {
       case 'live':
         return 'LIVE';
       case 'finished':
         return 'Завершен';
       case 'upcoming':
-        return 'Предстоящий';
+        return 'Ожидается';
       case 'cancelled':
         return 'Отменен';
       default:
@@ -51,162 +55,171 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onPress }) => {
   };
 
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
-      <Surface style={styles.card}>
-        <View style={styles.header}>
-          <View style={styles.leagueInfo}>
-            <Text style={styles.league}>{match.league}</Text>
-            {match.tour && (
-              <Text style={styles.tour}>Тур {match.tour}</Text>
-            )}
-          </View>
-          <Chip
-            style={[
-              styles.statusChip,
-              { backgroundColor: getStatusColor(match.status) },
-            ]}
-            textStyle={styles.statusText}
-          >
-            {getStatusLabel(match.status)}
-          </Chip>
-        </View>
-
-        <View style={styles.teamsContainer}>
-          <View style={styles.teamRow}>
-            <Text style={styles.teamName}>{match.home_team}</Text>
-            {match.home_score !== undefined && (
-              <Text style={styles.score}>{match.home_score}</Text>
-            )}
-          </View>
-          <Text style={styles.vs}>vs</Text>
-          <View style={styles.teamRow}>
-            <Text style={styles.teamName}>{match.away_team}</Text>
-            {match.away_score !== undefined && (
-              <Text style={styles.score}>{match.away_score}</Text>
-            )}
-          </View>
-        </View>
-
+    <TouchableOpacity
+      style={styles.card}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
+      {/* Header with league and date */}
+      <View style={styles.header}>
+        <Text style={styles.league}>{match.league}</Text>
         <Text style={styles.date}>{formatDate(match.starts_at)}</Text>
+      </View>
 
-        {(match.odd_home || match.odd_draw || match.odd_away) && (
-          <View style={styles.oddsContainer}>
-            <View style={styles.oddItem}>
-              <Text style={styles.oddLabel}>П1</Text>
-              <Text style={styles.oddValue}>
-                {match.odd_home || '-'}
-              </Text>
-            </View>
-            <View style={styles.oddItem}>
-              <Text style={styles.oddLabel}>X</Text>
-              <Text style={styles.oddValue}>
-                {match.odd_draw || '-'}
-              </Text>
-            </View>
-            <View style={styles.oddItem}>
-              <Text style={styles.oddLabel}>П2</Text>
-              <Text style={styles.oddValue}>
-                {match.odd_away || '-'}
-              </Text>
-            </View>
+      {/* Main content with teams and score */}
+      <View style={styles.content}>
+        <View style={styles.teamsContainer}>
+          {/* Home team */}
+          <View style={styles.teamRow}>
+            <Text style={styles.teamName} numberOfLines={1}>
+              {match.home_team}
+            </Text>
+            {match.status === 'finished' || match.status === 'live' ? (
+              <Text style={styles.score}>{match.home_score || 0}</Text>
+            ) : null}
           </View>
-        )}
-      </Surface>
+
+          {/* Separator */}
+          <View style={styles.separator} />
+
+          {/* Away team */}
+          <View style={styles.teamRow}>
+            <Text style={styles.teamName} numberOfLines={1}>
+              {match.away_team}
+            </Text>
+            {match.status === 'finished' || match.status === 'live' ? (
+              <Text style={styles.score}>{match.away_score || 0}</Text>
+            ) : null}
+          </View>
+        </View>
+
+        {/* Status badge */}
+        <View style={styles.statusContainer}>
+          <View style={[styles.statusBadge, getStatusStyle(match.status)]}>
+            <Text style={styles.statusText}>
+              {getStatusText(match.status)}
+            </Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Footer with match info */}
+      {match.info && (
+        <View style={styles.footer}>
+          <Text style={styles.infoText} numberOfLines={1}>
+            {match.info}
+          </Text>
+        </View>
+      )}
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    marginHorizontal: 16,
-    marginVertical: 8,
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: '#0a0a0a',
+    backgroundColor: colors.card,
+    marginHorizontal: spacing.md,
+    marginVertical: spacing.xs,
+    borderRadius: borderRadius.lg,
     borderWidth: 1,
-    borderColor: '#333333',
+    borderColor: colors.border,
+    overflow: 'hidden',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
-  },
-  leagueInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.sm,
   },
   league: {
-    fontSize: 14,
-    color: '#666666',
-    fontWeight: '500',
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.medium,
+    color: colors.mutedForeground,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
-  tour: {
-    fontSize: 12,
-    color: '#666666',
+  date: {
+    fontSize: typography.fontSize.xs,
+    color: colors.mutedForeground,
   },
-  statusChip: {
-    height: 24,
-    paddingHorizontal: 8,
-  },
-  statusText: {
-    fontSize: 11,
-    fontWeight: 'bold',
-    color: '#ffffff',
+  content: {
+    flexDirection: 'row',
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.md,
   },
   teamsContainer: {
-    marginVertical: 12,
+    flex: 1,
+    marginRight: spacing.md,
   },
   teamRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginVertical: 4,
+    paddingVertical: spacing.xs,
   },
   teamName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#ffffff',
     flex: 1,
+    fontSize: typography.fontSize.base,
+    fontWeight: typography.fontWeight.medium,
+    color: colors.foreground,
+    marginRight: spacing.sm,
   },
   score: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#ffffff',
-    marginLeft: 16,
-  },
-  vs: {
-    fontSize: 14,
-    color: '#666666',
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.bold,
+    color: colors.foreground,
+    minWidth: 24,
     textAlign: 'center',
-    marginVertical: 4,
   },
-  date: {
-    fontSize: 12,
-    color: '#666666',
-    marginTop: 8,
+  separator: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginVertical: spacing.xs,
   },
-  oddsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#333333',
+  statusContainer: {
+    justifyContent: 'center',
   },
-  oddItem: {
+  statusBadge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.md,
+    minWidth: 80,
     alignItems: 'center',
   },
-  oddLabel: {
-    fontSize: 11,
-    color: '#666666',
-    marginBottom: 4,
+  statusText: {
+    fontSize: typography.fontSize.xs,
+    fontWeight: typography.fontWeight.semibold,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
-  oddValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#ffffff',
+  statusLive: {
+    backgroundColor: colors.primary,
+  },
+  statusFinished: {
+    backgroundColor: colors.zinc[200],
+  },
+  statusUpcoming: {
+    backgroundColor: colors.zinc[100],
+  },
+  statusCancelled: {
+    backgroundColor: colors.zinc[50],
+  },
+  statusDefault: {
+    backgroundColor: colors.zinc[100],
+  },
+  footer: {
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.md,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  infoText: {
+    fontSize: typography.fontSize.xs,
+    color: colors.mutedForeground,
+    fontStyle: 'italic',
   },
 });
 
