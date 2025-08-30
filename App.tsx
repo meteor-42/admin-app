@@ -15,7 +15,7 @@ import LoginScreen from './src/components/screens/LoginScreen';
 import MatchListScreen from './src/components/screens/MatchListScreen';
 
 // Import theme
-import { colors } from './theme/colors';
+import { colors } from './theme/theme';
 
 const Stack = createStackNavigator();
 
@@ -81,11 +81,6 @@ function AppNavigator() {
             component={MatchListScreen}
             options={{ headerShown: false }}
           />
-          {/* <Stack.Screen
-            name="MatchEdit"
-            component={MatchEditScreen}
-            options={{ title: 'Редактировать' }}
-          /> */}
         </>
       ) : (
         <Stack.Screen

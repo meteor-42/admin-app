@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { Text } from 'react-native-paper';
 import { Match } from './types';
-import { globalStyles } from '../../theme/globalStyles';
+import { globalStyles } from '../../theme/theme';
 
 interface MatchCardProps {
   match: Match;

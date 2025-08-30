@@ -15,8 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
-import { globalStyles } from '../../../theme/globalStyles';
-import { colors, spacing, borderRadius, typography } from '../../../theme/colors';
+import { globalStyles, colors } from '../../../theme/theme';
 
 const LoginScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -137,7 +136,7 @@ const LoginScreen: React.FC = () => {
 
               {/* Login Button */}
               <TouchableOpacity
-                style={[styles.button, loading && styles.buttonDisabled]}
+                style={[globalStyles.loginButton, loading && globalStyles.loginButtonDisabled]}
                 onPress={handleLogin}
                 disabled={loading}
                 activeOpacity={0.8}
@@ -145,7 +144,7 @@ const LoginScreen: React.FC = () => {
                 {loading ? (
                   <ActivityIndicator size="small" color={colors.primaryForeground} />
                 ) : (
-                  <Text style={styles.buttonText}>Войти</Text>
+                  <Text style={globalStyles.loginButtonText}>Войти</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -155,81 +154,5 @@ const LoginScreen: React.FC = () => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  scrollView: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: spacing.lg,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-  },
-  loginCard: {
-    width: '100%',
-    maxWidth: 400,
-    alignSelf: 'center',
-  },
-  headerSection: {
-    alignItems: 'center',
-    marginBottom: spacing['2xl'],
-  },
-
-  title: {
-    fontSize: typography.fontSize['2xl'],
-    fontWeight: typography.fontWeight.semibold,
-    color: colors.foreground,
-    marginBottom: spacing.xs,
-  },
-
-  formSection: {
-    marginBottom: spacing.xl,
-  },
-  inputContainer: {
-    marginBottom: spacing.lg,
-  },
-  label: {
-    fontSize: typography.fontSize.sm,
-    fontWeight: typography.fontWeight.medium,
-    color: colors.foreground,
-    marginBottom: spacing.sm,
-  },
-  input: {
-    backgroundColor: colors.input,
-    borderRadius: borderRadius.md,
-    paddingHorizontal: spacing.md,
-    height: 44,
-    fontSize: typography.fontSize.base,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  button: {
-    backgroundColor: colors.primary,
-    borderRadius: borderRadius.md,
-    paddingVertical: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: spacing.sm,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    fontSize: typography.fontSize.base,
-    fontWeight: typography.fontWeight.medium,
-    color: colors.primaryForeground,
-  },
-
-});
 
 export default LoginScreen;

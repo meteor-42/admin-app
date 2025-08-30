@@ -16,7 +16,7 @@ import { usePocketBase } from '../contexts/PocketBaseContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Match } from '../types';
 import MatchCard from '../MatchCard';
-import { globalStyles } from '../../../theme/globalStyles';
+import { globalStyles } from '../../../theme/theme';
 
 const MatchListScreen: React.FC = () => {
   const navigation = useNavigation();
