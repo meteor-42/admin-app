@@ -2,7 +2,7 @@ import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { Provider as PaperProvider } from 'react-native-paper';
+import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-gesture-handler';
 
@@ -15,7 +15,41 @@ import LoginScreen from './src/components/screens/LoginScreen';
 import MatchListScreen from './src/components/screens/MatchListScreen';
 import MatchEditScreen from './src/components/screens/MatchEditScreen';
 
+// Import theme
+import { colors } from './src/theme/colors';
+
 const Stack = createStackNavigator();
+
+// Кастомная монохромная тема
+const theme = {
+  ...MD3LightTheme,
+  colors: {
+    ...MD3LightTheme.colors,
+    primary: colors.primary,
+    onPrimary: colors.primaryForeground,
+    primaryContainer: colors.secondary,
+    onPrimaryContainer: colors.secondaryForeground,
+    secondary: colors.secondary,
+    onSecondary: colors.secondaryForeground,
+    secondaryContainer: colors.muted,
+    onSecondaryContainer: colors.mutedForeground,
+    background: colors.background,
+    onBackground: colors.foreground,
+    surface: colors.card,
+    onSurface: colors.cardForeground,
+    surfaceVariant: colors.muted,
+    onSurfaceVariant: colors.mutedForeground,
+    outline: colors.border,
+    elevation: {
+      level0: 'transparent',
+      level1: colors.card,
+      level2: colors.card,
+      level3: colors.card,
+      level4: colors.card,
+      level5: colors.card,
+    },
+  },
+};
 
 function AppNavigator() {
   const { user, isLoading } = useAuth();
@@ -28,11 +62,16 @@ function AppNavigator() {
     <Stack.Navigator
       screenOptions={{
         headerStyle: {
-          backgroundColor: '#6200ee',
+          backgroundColor: colors.background,
+          elevation: 0,
+          shadowOpacity: 0,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
         },
-        headerTintColor: '#fff',
+        headerTintColor: colors.foreground,
         headerTitleStyle: {
-          fontWeight: 'bold',
+          fontWeight: '600',
+          fontSize: 16,
         },
       }}
     >
@@ -41,19 +80,19 @@ function AppNavigator() {
           <Stack.Screen
             name="MatchList"
             component={MatchListScreen}
-            options={{ title: 'Matches' }}
+            options={{ title: 'Матчи' }}
           />
           <Stack.Screen
             name="MatchEdit"
             component={MatchEditScreen}
-            options={{ title: 'Edit Match' }}
+            options={{ title: 'Редактировать' }}
           />
         </>
       ) : (
         <Stack.Screen
           name="Login"
           component={LoginScreen}
-          options={{ title: 'Login' }}
+          options={{ headerShown: false }}
         />
       )}
     </Stack.Navigator>
