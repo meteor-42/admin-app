@@ -13,7 +13,6 @@ import { AuthProvider, useAuth } from './src/components/contexts/AuthContext';
 // Import screens
 import LoginScreen from './src/components/screens/LoginScreen';
 import MatchListScreen from './src/components/screens/MatchListScreen';
-import MatchEditScreen from './src/components/screens/MatchEditScreen';
 
 // Import theme
 import { colors } from './theme/colors';
@@ -80,13 +79,13 @@ function AppNavigator() {
           <Stack.Screen
             name="MatchList"
             component={MatchListScreen}
-            options={{ title: 'Матчи' }}
+            options={{ headerShown: false }}
           />
-          <Stack.Screen
+          {/* <Stack.Screen
             name="MatchEdit"
             component={MatchEditScreen}
             options={{ title: 'Редактировать' }}
-          />
+          /> */}
         </>
       ) : (
         <Stack.Screen

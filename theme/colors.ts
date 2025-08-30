@@ -19,34 +19,34 @@ export const colors = {
     950: '#09090B',
   },
 
-  // Семантические цвета (монохромные варианты)
-  background: '#FFFFFF',
-  foreground: '#09090B',
+  // Семантические цвета (черная тема)
+  background: '#000000',
+  foreground: '#FFFFFF',
 
-  card: '#FFFFFF',
-  cardForeground: '#09090B',
+  card: '#111111',
+  cardForeground: '#FFFFFF',
 
-  popover: '#FFFFFF',
-  popoverForeground: '#09090B',
+  popover: '#111111',
+  popoverForeground: '#FFFFFF',
 
-  primary: '#18181B',
-  primaryForeground: '#FAFAFA',
+  primary: '#FFFFFF',
+  primaryForeground: '#000000',
 
-  secondary: '#F4F4F5',
-  secondaryForeground: '#18181B',
+  secondary: '#222222',
+  secondaryForeground: '#FFFFFF',
 
-  muted: '#F4F4F5',
-  mutedForeground: '#71717A',
+  muted: '#222222',
+  mutedForeground: '#888888',
 
-  accent: '#F4F4F5',
-  accentForeground: '#18181B',
+  accent: '#222222',
+  accentForeground: '#FFFFFF',
 
-  destructive: '#18181B',
-  destructiveForeground: '#FAFAFA',
+  destructive: '#FF3333',
+  destructiveForeground: '#FFFFFF',
 
-  border: '#E4E4E7',
-  input: '#E4E4E7',
-  ring: '#18181B',
+  border: '#333333',
+  input: '#222222',
+  ring: '#FFFFFF',
 
   // Статусы (минималистичные)
   status: {

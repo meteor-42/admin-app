@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   View,
-  StyleSheet,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -16,7 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
-import { colors, spacing, borderRadius, typography } from '../../../theme/colors';
+import { globalStyles } from '../../../theme/globalStyles';
 
 const LoginScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -57,40 +56,40 @@ const LoginScreen: React.FC = () => {
 
   if (isLoading) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={globalStyles.loginLoadingContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={globalStyles.loginContainer}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
+        style={globalStyles.loginKeyboardView}
       >
         <ScrollView
-          contentContainerStyle={styles.scrollView}
+          contentContainerStyle={globalStyles.loginScrollView}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.loginCard}>
+          <View style={globalStyles.loginCard}>
             {/* Logo/Title Section */}
-            <View style={styles.headerSection}>
-              <Text style={styles.title}>В Х О Д</Text>
+            <View style={globalStyles.loginHeaderSection}>
+              <Text style={globalStyles.loginTitle}>В Х О Д</Text>
             </View>
 
             {/* Form Section */}
-            <View style={styles.formSection}>
-              <View style={styles.inputContainer}>
-                <Text style={styles.label}>E-Mail</Text>
+            <View style={globalStyles.loginFormSection}>
+              <View style={globalStyles.loginInputContainer}>
+                <Text style={globalStyles.loginLabel}>E-Mail</Text>
                 <TextInput
                   value={email}
                   onChangeText={setEmail}
                   autoCapitalize="none"
                   keyboardType="email-address"
                   mode="flat"
-                  style={styles.input}
+                  style={globalStyles.loginInput}
                   placeholder="oleg.palmieri@ya.ru"
                   placeholderTextColor={colors.mutedForeground}
                   underlineColor="transparent"
@@ -105,14 +104,14 @@ const LoginScreen: React.FC = () => {
                 />
               </View>
 
-              <View style={styles.inputContainer}>
-                <Text style={styles.label}>Пароль</Text>
+              <View style={globalStyles.loginInputContainer}>
+                <Text style={globalStyles.loginLabel}>Пароль</Text>
                 <TextInput
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}
                   mode="flat"
-                  style={styles.input}
+                  style={globalStyles.loginInput}
                   placeholder="2BjnKE63!"
                   placeholderTextColor={colors.mutedForeground}
                   underlineColor="transparent"
@@ -184,30 +183,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing['2xl'],
   },
-  logoPlaceholder: {
-    width: 48,
-    height: 48,
-    borderRadius: borderRadius.lg,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
-  logoText: {
-    fontSize: typography.fontSize['2xl'],
-    fontWeight: typography.fontWeight.bold,
-    color: colors.primaryForeground,
-  },
+
   title: {
     fontSize: typography.fontSize['2xl'],
     fontWeight: typography.fontWeight.semibold,
     color: colors.foreground,
     marginBottom: spacing.xs,
   },
-  subtitle: {
-    fontSize: typography.fontSize.sm,
-    color: colors.mutedForeground,
-  },
+
   formSection: {
     marginBottom: spacing.xl,
   },
@@ -245,22 +228,7 @@ const styles = StyleSheet.create({
     fontWeight: typography.fontWeight.medium,
     color: colors.primaryForeground,
   },
-  footer: {
-    alignItems: 'center',
-    paddingTop: spacing.lg,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
-  },
-  footerText: {
-    fontSize: typography.fontSize.sm,
-    color: colors.mutedForeground,
-    marginBottom: spacing.xs,
-  },
-  footerLink: {
-    fontSize: typography.fontSize.sm,
-    color: colors.foreground,
-    fontWeight: typography.fontWeight.medium,
-  },
+
 });
 
 export default LoginScreen;

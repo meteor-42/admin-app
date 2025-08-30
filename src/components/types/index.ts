@@ -27,12 +27,3 @@ export interface AuthState {
 }
 
 export type MatchStatus = 'upcoming' | 'live' | 'finished' | 'cancelled';
-
-export interface EditMatchPayload {
-  home_score?: number;
-  away_score?: number;
-  status?: MatchStatus;
-  odd_home?: number;
-  odd_draw?: number;
-  odd_away?: number;
-}
