@@ -102,13 +102,13 @@ function AppNavigator() {
 export default function App() {
   return (
     <SafeAreaProvider>
-      <PaperProvider>
+      <PaperProvider theme={theme}>
         <PocketBaseProvider>
           <AuthProvider>
             <NavigationContainer>
               <AppNavigator />
             </NavigationContainer>
-            <StatusBar style="auto" />
+            <StatusBar style="dark" />
           </AuthProvider>
         </PocketBaseProvider>
       </PaperProvider>
