@@ -16,7 +16,7 @@ import MatchListScreen from './src/components/screens/MatchListScreen';
 import MatchEditScreen from './src/components/screens/MatchEditScreen';
 
 // Import theme
-import { colors } from './src/theme/colors';
+import { colors } from './theme/colors';
 
 const Stack = createStackNavigator();
 

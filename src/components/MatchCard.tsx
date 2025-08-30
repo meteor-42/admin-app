@@ -6,7 +6,7 @@ import {
 } from 'react-native';
 import { Text } from 'react-native-paper';
 import { Match } from './types';
-import { colors, spacing, borderRadius, typography } from '../theme/colors';
+import { colors, spacing, borderRadius, typography } from '../../theme/colors';
 
 interface MatchCardProps {
   match: Match;

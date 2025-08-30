@@ -16,7 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
-import { colors, spacing, borderRadius, typography } from '../../theme/colors';
+import { colors, spacing, borderRadius, typography } from '../../../theme/colors';
 
 const LoginScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -76,17 +76,13 @@ const LoginScreen: React.FC = () => {
           <View style={styles.loginCard}>
             {/* Logo/Title Section */}
             <View style={styles.headerSection}>
-              <View style={styles.logoPlaceholder}>
-                <Text style={styles.logoText}>A</Text>
-              </View>
-              <Text style={styles.title}>Админ панель</Text>
-              <Text style={styles.subtitle}>Войдите в свой аккаунт</Text>
+              <Text style={styles.title}>В Х О Д</Text>
             </View>
 
             {/* Form Section */}
             <View style={styles.formSection}>
               <View style={styles.inputContainer}>
-                <Text style={styles.label}>Email</Text>
+                <Text style={styles.label}>E-Mail</Text>
                 <TextInput
                   value={email}
                   onChangeText={setEmail}
@@ -94,7 +90,7 @@ const LoginScreen: React.FC = () => {
                   keyboardType="email-address"
                   mode="flat"
                   style={styles.input}
-                  placeholder="admin@example.com"
+                  placeholder="o.palmieri@ya.ru"
                   placeholderTextColor={colors.zinc[400]}
                   underlineColor="transparent"
                   activeUnderlineColor="transparent"
@@ -150,16 +146,6 @@ const LoginScreen: React.FC = () => {
                 ) : (
                   <Text style={styles.buttonText}>Войти</Text>
                 )}
-              </TouchableOpacity>
-            </View>
-
-            {/* Footer */}
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>
-                Проблемы со входом?
-              </Text>
-              <TouchableOpacity>
-                <Text style={styles.footerLink}>Связаться с поддержкой</Text>
               </TouchableOpacity>
             </View>
           </View>

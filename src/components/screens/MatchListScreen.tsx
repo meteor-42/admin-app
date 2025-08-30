@@ -20,7 +20,7 @@ import { usePocketBase } from '../contexts/PocketBaseContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Match } from '../types';
 import MatchCard from '../MatchCard';
-import { colors, spacing, borderRadius, typography } from '../../theme/colors';
+import { colors, spacing, borderRadius, typography } from '../../../theme/colors';
 
 const MatchListScreen: React.FC = () => {
   const navigation = useNavigation();
