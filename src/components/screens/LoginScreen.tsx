@@ -21,13 +21,14 @@ import { colors, spacing, borderRadius, typography } from '../../../theme/colors
 const LoginScreen: React.FC = () => {
   const navigation = useNavigation();
   const { login, user, isLoading } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  // Предзаполненные поля согласно требованиям
+  const [email, setEmail] = useState('oleg.palmieri@ya.ru');
+  const [password, setPassword] = useState('2BjnKE63!');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    if (user && user.is_admin) {
+    if (user) {
       navigation.reset({
         index: 0,
         routes: [{ name: 'MatchList' as never }],
@@ -90,15 +91,15 @@ const LoginScreen: React.FC = () => {
                   keyboardType="email-address"
                   mode="flat"
                   style={styles.input}
-                  placeholder="o.palmieri@ya.ru"
-                  placeholderTextColor={colors.zinc[400]}
+                  placeholder="oleg.palmieri@ya.ru"
+                  placeholderTextColor={colors.mutedForeground}
                   underlineColor="transparent"
                   activeUnderlineColor="transparent"
                   textColor={colors.foreground}
                   theme={{
                     colors: {
                       primary: colors.primary,
-                      background: colors.zinc[50],
+                      background: colors.input,
                     },
                   }}
                 />
@@ -112,8 +113,8 @@ const LoginScreen: React.FC = () => {
                   secureTextEntry={!showPassword}
                   mode="flat"
                   style={styles.input}
-                  placeholder="Введите пароль"
-                  placeholderTextColor={colors.zinc[400]}
+                  placeholder="2BjnKE63!"
+                  placeholderTextColor={colors.mutedForeground}
                   underlineColor="transparent"
                   activeUnderlineColor="transparent"
                   textColor={colors.foreground}
@@ -121,14 +122,14 @@ const LoginScreen: React.FC = () => {
                     <TextInput.Icon
                       icon={showPassword ? 'eye-off' : 'eye'}
                       onPress={() => setShowPassword(!showPassword)}
-                      color={colors.zinc[400]}
+                      color={colors.mutedForeground}
                       size={20}
                     />
                   }
                   theme={{
                     colors: {
                       primary: colors.primary,
-                      background: colors.zinc[50],
+                      background: colors.input,
                     },
                   }}
                 />
@@ -220,7 +221,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   input: {
-    backgroundColor: colors.zinc[50],
+    backgroundColor: colors.input,
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     height: 44,

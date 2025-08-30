@@ -50,12 +50,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
-      const authData = await pb.collection('users').authWithPassword(email, password);
-
-      // Проверяем, является ли пользователь администратором
-      if (!authData.record.is_admin) {
-        throw new Error('У вас нет прав администратора');
-      }
+      // Используем коллекцию _superusers согласно документации
+      const authData = await pb.collection('_superusers').authWithPassword(email, password);
 
       await AsyncStorage.setItem('pb_auth', JSON.stringify({
         token: pb.authStore.token,

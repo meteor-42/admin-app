@@ -2,8 +2,8 @@ import React, { createContext, useContext } from 'react';
 import PocketBase from 'pocketbase';
 
 // Настройка URL для PocketBase
-// Используется переменная окружения из .env файла
-const PB_URL = process.env.EXPO_PUBLIC_POCKETBASE_URL || 'http://localhost:8090';
+// URL сервера согласно требованиям
+const PB_URL = 'http://xn--d1aigb4b.xn--p1ai:8090';
 
 const pb = new PocketBase(PB_URL);
 

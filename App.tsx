@@ -2,7 +2,7 @@ import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
+import { Provider as PaperProvider, MD3DarkTheme } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-gesture-handler';
 
@@ -20,11 +20,11 @@ import { colors } from './theme/colors';
 
 const Stack = createStackNavigator();
 
-// Кастомная монохромная тема
+// Кастомная темная тема
 const theme = {
-  ...MD3LightTheme,
+  ...MD3DarkTheme,
   colors: {
-    ...MD3LightTheme.colors,
+    ...MD3DarkTheme.colors,
     primary: colors.primary,
     onPrimary: colors.primaryForeground,
     primaryContainer: colors.secondary,
@@ -108,7 +108,7 @@ export default function App() {
             <NavigationContainer>
               <AppNavigator />
             </NavigationContainer>
-            <StatusBar style="dark" />
+            <StatusBar style="light" />
           </AuthProvider>
         </PocketBaseProvider>
       </PaperProvider>
