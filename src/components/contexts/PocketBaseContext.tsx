@@ -2,8 +2,8 @@ import React, { createContext, useContext } from 'react';
 import PocketBase from 'pocketbase';
 
 // Настройка URL для PocketBase
-// Для разработки используйте IP вашего компьютера вместо localhost
-const PB_URL = 'http://192.168.1.100:8090'; // Замените на ваш IP
+// Используется переменная окружения из .env файла
+const PB_URL = process.env.EXPO_PUBLIC_POCKETBASE_URL || 'http://localhost:8090';
 
 const pb = new PocketBase(PB_URL);
 
