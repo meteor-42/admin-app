@@ -37,8 +37,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('💾 [checkAuth] Восстанавливаем сессию в PocketBase...');
         pb.authStore.save(authData.token, authData.model);
 
-        // Небольшая задержка для полной инициализации PocketBase
-        await new Promise(resolve => setTimeout(resolve, 50));
+        // Увеличиваем задержку для полной инициализации PocketBase
+        await new Promise(resolve => setTimeout(resolve, 100));
 
         console.log(`✅ [checkAuth] PocketBase authStore.isValid: ${pb.authStore.isValid}`);
         console.log(`🔐 [checkAuth] PocketBase authStore.token: ${!!pb.authStore.token}`);
@@ -59,7 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('📭 [checkAuth] Нет сохраненного токена, пользователь не авторизован');
         setAuthState(prev => ({ ...prev, isLoading: false }));
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ [checkAuth] Ошибка проверки аутентификации:', error);
       console.log('🔍 [checkAuth] Детали ошибки:', {
         message: error?.message,
@@ -90,6 +90,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         model: pb.authStore.model,
       }));
       console.log('✅ [login] Данные сохранены в AsyncStorage');
+
+      // Добавляем небольшую задержку для стабилизации состояния
+      await new Promise(resolve => setTimeout(resolve, 50));
 
       console.log('🎉 [login] Устанавливаем состояние пользователя');
       setAuthState({

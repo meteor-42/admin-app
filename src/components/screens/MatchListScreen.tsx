@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   FlatList,
@@ -26,40 +26,113 @@ const MatchListScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Используем ref для отслеживания монтирования компонента
+  const isMounted = useRef(true);
+  // Используем ref для предотвращения параллельных запросов
+  const loadingRef = useRef(false);
+  // AbortController для отмены запросов
+  const abortControllerRef = useRef<AbortController | null>(null);
+
   useEffect(() => {
     console.log('🚀 [MatchListScreen] Компонент смонтирован, запускаем загрузку матчей');
     console.log(`🎫 [MatchListScreen] Начальное состояние PocketBase: isValid=${pb.authStore.isValid}, hasToken=${!!pb.authStore.token}`);
-    loadMatches();
+
+    // Сбрасываем флаг монтирования
+    isMounted.current = true;
+
+    // Загружаем матчи с небольшой задержкой для стабилизации состояния
+    const timeoutId = setTimeout(() => {
+      if (isMounted.current) {
+        loadMatches();
+      }
+    }, 100);
+
+    // Cleanup функция
+    return () => {
+      console.log('🧹 [MatchListScreen] Cleanup: компонент размонтируется');
+      isMounted.current = false;
+      clearTimeout(timeoutId);
+
+      // Отменяем активный запрос если он есть
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+    };
   }, []);
 
   const loadMatches = async (attempt = 1) => {
     const maxAttempts = 3;
 
+    // Предотвращаем параллельные запросы
+    if (loadingRef.current && attempt === 1) {
+      console.log('⏸️ [loadMatches] Уже идет загрузка, пропускаем');
+      return;
+    }
+
+    // Проверяем, что компонент все еще смонтирован
+    if (!isMounted.current) {
+      console.log('🚫 [loadMatches] Компонент размонтирован, отменяем загрузку');
+      return;
+    }
+
+    loadingRef.current = true;
+
     console.log(`🔄 [loadMatches] Попытка ${attempt}/${maxAttempts} загрузки матчей`);
     console.log(`🎫 [loadMatches] PocketBase authStore.isValid: ${pb.authStore.isValid}`);
-    console.log(`🔑 [loadMatches] PocketBase authStore.token: ${!!pb.authStore.token}`);
     console.log(`👤 [loadMatches] PocketBase authStore.model: ${!!pb.authStore.model}`);
 
     // Проверяем готовность аутентификации
     if (!pb.authStore.isValid) {
       if (attempt < maxAttempts) {
-        console.log(`⚠️ [loadMatches] PocketBase не готов, повторяем через ${200 * attempt}мс`);
-        setTimeout(() => loadMatches(attempt + 1), 200 * attempt);
+        console.log(`⚠️ [loadMatches] PocketBase не готов, повторяем через ${300 * attempt}мс`);
+        setTimeout(() => {
+          if (isMounted.current) {
+            loadMatches(attempt + 1);
+          }
+        }, 300 * attempt);
         return;
       } else {
         console.error(`❌ [loadMatches] PocketBase не готов после ${maxAttempts} попыток`);
-        Alert.alert('Ошибка', 'Проблема с аутентификацией');
-        setLoading(false);
-        setRefreshing(false);
+        if (isMounted.current) {
+          Alert.alert('Ошибка', 'Проблема с аутентификацией');
+          setLoading(false);
+          setRefreshing(false);
+        }
+        loadingRef.current = false;
         return;
       }
     }
 
     try {
+      // Отменяем предыдущий запрос если он есть
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+
+      // Создаем новый AbortController
+      abortControllerRef.current = new AbortController();
+
       console.log('🌐 [loadMatches] Отправляем запрос к API...');
+
+      // Имитируем поддержку отмены запроса через таймаут
+      const timeoutId = setTimeout(() => {
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+        }
+      }, 10000); // 10 секунд таймаут
+
       const records = await pb.collection('matches').getFullList<Match>({
         sort: '-starts_at',
       });
+
+      clearTimeout(timeoutId);
+
+      if (!isMounted.current) {
+        console.log('🚫 [loadMatches] Компонент размонтирован после запроса');
+        return;
+      }
+
       console.log(`✅ [loadMatches] Успешно загружено матчей: ${records.length}`);
       console.log(`📊 [loadMatches] Первый матч:`, records[0] ? {
         id: records[0].id,
@@ -68,7 +141,14 @@ const MatchListScreen: React.FC = () => {
       } : 'нет матчей');
 
       setMatches(records);
+      abortControllerRef.current = null;
     } catch (error: any) {
+      // Проверяем, не была ли это отмена запроса
+      if (error?.name === 'AbortError' || !isMounted.current) {
+        console.log('🛑 [loadMatches] Запрос был отменен');
+        return;
+      }
+
       console.error(`❌ [loadMatches] Ошибка на попытке ${attempt}:`, error);
       console.log(`🔍 [loadMatches] Детали ошибки:`, {
         message: error?.message,
@@ -83,17 +163,19 @@ const MatchListScreen: React.FC = () => {
       const isServerError = error?.status >= 500;
       const shouldRetry = isNetworkError || isServerError;
 
-      if (attempt < maxAttempts && shouldRetry) {
-        const retryDelay = isNetworkError ? 2000 * attempt : 1000 * attempt; // Больше времени для сетевых ошибок
+      if (attempt < maxAttempts && shouldRetry && isMounted.current) {
+        const retryDelay = isNetworkError ? 2000 * attempt : 1000 * attempt;
         console.log(`🔄 [loadMatches] ${isNetworkError ? 'Сетевая ошибка' : 'Ошибка сервера'} - повторяем через ${retryDelay}мс...`);
-        setTimeout(() => loadMatches(attempt + 1), retryDelay);
+        setTimeout(() => {
+          if (isMounted.current) {
+            loadMatches(attempt + 1);
+          }
+        }, retryDelay);
         return;
-      } else if (attempt < maxAttempts) {
-        console.log(`⚠️ [loadMatches] Ошибка ${error?.status} не требует повтора, но попробуем еще раз`);
-        setTimeout(() => loadMatches(attempt + 1), 500);
-        return;
-      } else {
+      } else if (attempt >= maxAttempts) {
         console.error(`❌ [loadMatches] Окончательная ошибка после ${maxAttempts} попыток`);
+
+        if (!isMounted.current) return;
 
         // Более информативное сообщение об ошибке
         let errorMessage = 'Неизвестная ошибка';
@@ -110,10 +192,11 @@ const MatchListScreen: React.FC = () => {
         Alert.alert('Ошибка загрузки', errorMessage);
       }
     } finally {
-      if (attempt >= maxAttempts || pb.authStore.isValid) {
+      if (isMounted.current && (attempt >= maxAttempts || pb.authStore.isValid)) {
         console.log(`🏁 [loadMatches] Завершаем loading состояние`);
         setLoading(false);
         setRefreshing(false);
+        loadingRef.current = false;
       }
     }
   };

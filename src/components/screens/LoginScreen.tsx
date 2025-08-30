@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   KeyboardAvoidingView,
@@ -26,14 +26,24 @@ const LoginScreen: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Используем ref для предотвращения двойной навигации
+  const hasNavigated = useRef(false);
+
   useEffect(() => {
-    if (user) {
+    if (user && !hasNavigated.current) {
       console.log('🚀 [LoginScreen] Пользователь авторизован, переходим к списку матчей');
       console.log(`👤 [LoginScreen] Данные пользователя: ${user.email}`);
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'MatchList' as never }],
-      });
+
+      // Устанавливаем флаг, чтобы предотвратить повторную навигацию
+      hasNavigated.current = true;
+
+      // Небольшая задержка для завершения анимации
+      setTimeout(() => {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'MatchList' as never }],
+        });
+      }, 100);
     }
   }, [user, navigation]);
 
@@ -46,19 +56,37 @@ const LoginScreen: React.FC = () => {
       return;
     }
 
+    // Предотвращаем повторные нажатия
+    if (loading) {
+      console.log('⏸️ [LoginScreen] Уже идет авторизация, пропускаем');
+      return;
+    }
+
     console.log('🔄 [LoginScreen] Начинаем процесс авторизации');
     setLoading(true);
     try {
       await login(email, password);
       console.log('✅ [LoginScreen] Авторизация завершена успешно');
+      // Не сбрасываем loading здесь, так как будет переход на другой экран
     } catch (error: any) {
       console.error('❌ [LoginScreen] Ошибка авторизации:', error);
-      Alert.alert(
-        'Ошибка входа',
-        error.message || 'Неправильный email или пароль'
-      );
-    } finally {
-      console.log('🏁 [LoginScreen] Завершаем loading состояние');
+
+      // Более детальная обработка ошибок
+      let errorMessage = 'Неправильный email или пароль';
+
+      if (error?.status === 0 || error?.message?.includes('Network')) {
+        errorMessage = 'Проблема с сетью. Проверьте интернет соединение.';
+      } else if (error?.status === 400) {
+        errorMessage = 'Неверный email или пароль';
+      } else if (error?.status >= 500) {
+        errorMessage = 'Сервер временно недоступен. Попробуйте позже.';
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+
+      Alert.alert('Ошибка входа', errorMessage);
+
+      // Сбрасываем loading только при ошибке
       setLoading(false);
     }
   };
@@ -104,6 +132,7 @@ const LoginScreen: React.FC = () => {
                   underlineColor="transparent"
                   activeUnderlineColor="transparent"
                   textColor={colors.foreground}
+                  editable={!loading}
                   theme={{
                     colors: {
                       primary: colors.primary,
@@ -126,12 +155,14 @@ const LoginScreen: React.FC = () => {
                   underlineColor="transparent"
                   activeUnderlineColor="transparent"
                   textColor={colors.foreground}
+                  editable={!loading}
                   right={
                     <TextInput.Icon
                       icon={showPassword ? 'eye-off' : 'eye'}
                       onPress={() => setShowPassword(!showPassword)}
                       color={colors.mutedForeground}
                       size={20}
+                      disabled={loading}
                     />
                   }
                   theme={{
