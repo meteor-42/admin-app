@@ -5,14 +5,14 @@ import {
   FlatList,
   RefreshControl,
   Alert,
+  TouchableOpacity,
+  ScrollView,
 } from 'react-native';
 import {
   Searchbar,
   FAB,
   ActivityIndicator,
   Text,
-  Chip,
-  IconButton,
 } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -20,6 +20,7 @@ import { usePocketBase } from '../contexts/PocketBaseContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Match } from '../types';
 import MatchCard from '../MatchCard';
+import { colors, spacing, borderRadius, typography } from '../../theme/colors';
 
 const MatchListScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -31,6 +32,13 @@ const MatchListScreen: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+
+  const filterOptions = [
+    { value: 'all', label: 'Все' },
+    { value: 'upcoming', label: 'Ожидаются' },
+    { value: 'live', label: 'Live' },
+    { value: 'finished', label: 'Завершены' },
+  ];
 
   useEffect(() => {
     loadMatches();
@@ -106,114 +114,72 @@ const MatchListScreen: React.FC = () => {
     navigation.navigate('MatchEdit' as never, { match } as never);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'live':
-        return '#ef4444';
-      case 'finished':
-        return '#22c55e';
-      case 'upcoming':
-        return '#3b82f6';
-      case 'cancelled':
-        return '#666666';
-      default:
-        return '#666666';
-    }
-  };
-
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#ffffff" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
         <Searchbar
-          placeholder="Поиск матчей..."
+          placeholder="Поиск по командам или лиге..."
           onChangeText={setSearchQuery}
           value={searchQuery}
           style={styles.searchbar}
           inputStyle={styles.searchInput}
-          iconColor="#666666"
-          placeholderTextColor="#666666"
+          iconColor={colors.mutedForeground}
+          placeholderTextColor={colors.mutedForeground}
           theme={{
             colors: {
-              onSurface: '#ffffff',
-              primary: '#666666',
+              onSurface: colors.foreground,
+              primary: colors.primary,
             },
           }}
         />
-        <IconButton
-          icon="logout"
-          size={24}
-          iconColor="#666666"
+        <TouchableOpacity
+          style={styles.logoutButton}
           onPress={handleLogout}
-        />
+          activeOpacity={0.7}
+        >
+          <Text style={styles.logoutIcon}>⎋</Text>
+        </TouchableOpacity>
       </View>
 
-      <View style={styles.filterContainer}>
-        <Chip
-          selected={statusFilter === 'all'}
-          onPress={() => setStatusFilter('all')}
-          style={[
-            styles.filterChip,
-            statusFilter === 'all' && styles.selectedChip,
-          ]}
-          textStyle={[
-            styles.chipText,
-            statusFilter === 'all' && styles.selectedChipText,
-          ]}
-        >
-          Все
-        </Chip>
-        <Chip
-          selected={statusFilter === 'upcoming'}
-          onPress={() => setStatusFilter('upcoming')}
-          style={[
-            styles.filterChip,
-            statusFilter === 'upcoming' && styles.selectedChip,
-          ]}
-          textStyle={[
-            styles.chipText,
-            statusFilter === 'upcoming' && styles.selectedChipText,
-          ]}
-        >
-          Предстоящие
-        </Chip>
-        <Chip
-          selected={statusFilter === 'live'}
-          onPress={() => setStatusFilter('live')}
-          style={[
-            styles.filterChip,
-            statusFilter === 'live' && styles.selectedChip,
-          ]}
-          textStyle={[
-            styles.chipText,
-            statusFilter === 'live' && styles.selectedChipText,
-          ]}
-        >
-          Live
-        </Chip>
-        <Chip
-          selected={statusFilter === 'finished'}
-          onPress={() => setStatusFilter('finished')}
-          style={[
-            styles.filterChip,
-            statusFilter === 'finished' && styles.selectedChip,
-          ]}
-          textStyle={[
-            styles.chipText,
-            statusFilter === 'finished' && styles.selectedChipText,
-          ]}
-        >
-          Завершенные
-        </Chip>
-      </View>
+      {/* Filter Tabs */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.filterScrollView}
+        contentContainerStyle={styles.filterContainer}
+      >
+        {filterOptions.map((option) => (
+          <TouchableOpacity
+            key={option.value}
+            style={[
+              styles.filterTab,
+              statusFilter === option.value && styles.filterTabActive,
+            ]}
+            onPress={() => setStatusFilter(option.value)}
+            activeOpacity={0.7}
+          >
+            <Text
+              style={[
+                styles.filterTabText,
+                statusFilter === option.value && styles.filterTabTextActive,
+              ]}
+            >
+              {option.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
 
+      {/* Match List */}
       <FlatList
         data={filteredMatches}
         keyExtractor={(item) => item.id}
@@ -227,26 +193,33 @@ const MatchListScreen: React.FC = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            colors={['#ffffff']}
-            tintColor="#ffffff"
+            colors={[colors.primary]}
+            tintColor={colors.primary}
           />
         }
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>Нет матчей</Text>
+            <Text style={styles.emptyIcon}>□</Text>
+            <Text style={styles.emptyTitle}>Нет матчей</Text>
+            <Text style={styles.emptyText}>
+              {searchQuery
+                ? 'Попробуйте изменить параметры поиска'
+                : 'Добавьте первый матч с помощью кнопки ниже'}
+            </Text>
           </View>
         }
       />
 
+      {/* FAB */}
       <FAB
         icon="plus"
         style={styles.fab}
         onPress={() => navigation.navigate('MatchEdit' as never)}
-        color="#000000"
+        color={colors.primaryForeground}
         theme={{
           colors: {
-            primaryContainer: '#ffffff',
+            primaryContainer: colors.primary,
           },
         }}
       />
@@ -257,72 +230,110 @@ const MatchListScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: colors.background,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#000000',
+    backgroundColor: colors.background,
   },
-  header: {
+  searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: '#333333',
+    borderBottomColor: colors.border,
   },
   searchbar: {
     flex: 1,
-    backgroundColor: '#1a1a1a',
-    borderRadius: 8,
+    backgroundColor: colors.zinc[50],
+    elevation: 0,
+    borderRadius: borderRadius.lg,
+    height: 44,
   },
   searchInput: {
-    color: '#ffffff',
+    fontSize: typography.fontSize.sm,
+    color: colors.foreground,
+  },
+  logoutButton: {
+    marginLeft: spacing.sm,
+    width: 44,
+    height: 44,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.zinc[50],
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  logoutIcon: {
+    fontSize: 20,
+    color: colors.mutedForeground,
+  },
+  filterScrollView: {
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   filterContainer: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    gap: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#333333',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
   },
-  filterChip: {
-    backgroundColor: '#1a1a1a',
+  filterTab: {
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    marginRight: spacing.sm,
+    borderRadius: borderRadius.full,
+    backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: '#333333',
+    borderColor: colors.border,
   },
-  selectedChip: {
-    backgroundColor: '#ffffff',
-    borderColor: '#ffffff',
+  filterTabActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
-  chipText: {
-    color: '#666666',
+  filterTabText: {
+    fontSize: typography.fontSize.sm,
+    fontWeight: typography.fontWeight.medium,
+    color: colors.mutedForeground,
   },
-  selectedChipText: {
-    color: '#000000',
+  filterTabTextActive: {
+    color: colors.primaryForeground,
   },
   listContent: {
+    paddingVertical: spacing.sm,
     paddingBottom: 80,
   },
   emptyContainer: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
     paddingTop: 100,
+    paddingHorizontal: spacing.xl,
+  },
+  emptyIcon: {
+    fontSize: 48,
+    color: colors.zinc[200],
+    marginBottom: spacing.md,
+  },
+  emptyTitle: {
+    fontSize: typography.fontSize.lg,
+    fontWeight: typography.fontWeight.semibold,
+    color: colors.foreground,
+    marginBottom: spacing.xs,
   },
   emptyText: {
-    color: '#666666',
-    fontSize: 16,
+    fontSize: typography.fontSize.sm,
+    color: colors.mutedForeground,
+    textAlign: 'center',
+    lineHeight: 20,
   },
   fab: {
     position: 'absolute',
-    margin: 16,
+    margin: spacing.md,
     right: 0,
     bottom: 0,
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.primary,
   },
 });
 
