@@ -28,6 +28,8 @@ const LoginScreen: React.FC = () => {
 
   useEffect(() => {
     if (user) {
+      console.log('🚀 [LoginScreen] Пользователь авторизован, переходим к списку матчей');
+      console.log(`👤 [LoginScreen] Данные пользователя: ${user.email}`);
       navigation.reset({
         index: 0,
         routes: [{ name: 'MatchList' as never }],
@@ -36,20 +38,27 @@ const LoginScreen: React.FC = () => {
   }, [user, navigation]);
 
   const handleLogin = async () => {
+    console.log('🔐 [LoginScreen] Пользователь нажал кнопку входа');
+
     if (!email || !password) {
+      console.log('⚠️ [LoginScreen] Пустые поля email или пароль');
       Alert.alert('Ошибка', 'Введите email и пароль');
       return;
     }
 
+    console.log('🔄 [LoginScreen] Начинаем процесс авторизации');
     setLoading(true);
     try {
       await login(email, password);
+      console.log('✅ [LoginScreen] Авторизация завершена успешно');
     } catch (error: any) {
+      console.error('❌ [LoginScreen] Ошибка авторизации:', error);
       Alert.alert(
         'Ошибка входа',
         error.message || 'Неправильный email или пароль'
       );
     } finally {
+      console.log('🏁 [LoginScreen] Завершаем loading состояние');
       setLoading(false);
     }
   };

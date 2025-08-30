@@ -1,11 +1,22 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 import PocketBase from 'pocketbase';
 
 // Настройка URL для PocketBase
 // URL сервера согласно требованиям
 const PB_URL = 'http://xn--d1aigb4b.xn--p1ai:8090';
 
+console.log('🏗️ [PocketBase] Инициализация PocketBase с URL:', PB_URL);
 const pb = new PocketBase(PB_URL);
+
+// Добавляем слушатель изменений authStore для дебага
+pb.authStore.onChange((token, model) => {
+  console.log('🔄 [PocketBase] AuthStore изменился:', {
+    hasToken: !!token,
+    hasModel: !!model,
+    isValid: pb.authStore.isValid,
+    modelType: model?.collectionName || 'unknown'
+  });
+});
 
 const PocketBaseContext = createContext<PocketBase | undefined>(undefined);
 
