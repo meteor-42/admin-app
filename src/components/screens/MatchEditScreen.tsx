@@ -23,7 +23,6 @@ import {
 } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { usePocketBase } from '../contexts/PocketBaseContext';
 import { Match, MatchStatus } from '../types';
 
@@ -48,8 +47,10 @@ const MatchEditScreen: React.FC = () => {
     odd_away: undefined,
   });
 
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showDateModal, setShowDateModal] = useState(false);
+  const [showTimeModal, setShowTimeModal] = useState(false);
+  const [tempDate, setTempDate] = useState('');
+  const [tempTime, setTempTime] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -169,25 +170,56 @@ const MatchEditScreen: React.FC = () => {
     );
   };
 
-  const handleDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      const current = new Date(match.starts_at || new Date());
-      current.setFullYear(selectedDate.getFullYear());
-      current.setMonth(selectedDate.getMonth());
-      current.setDate(selectedDate.getDate());
-      setMatch({ ...match, starts_at: current.toISOString() });
-    }
+  const formatDateForInput = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
-  const handleTimeChange = (event: any, selectedTime?: Date) => {
-    setShowTimePicker(false);
-    if (selectedTime) {
-      const current = new Date(match.starts_at || new Date());
-      current.setHours(selectedTime.getHours());
-      current.setMinutes(selectedTime.getMinutes());
-      setMatch({ ...match, starts_at: current.toISOString() });
+  const formatTimeForInput = (date: Date) => {
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
+  };
+
+  const handleDateSave = () => {
+    if (tempDate) {
+      const [year, month, day] = tempDate.split('-').map(Number);
+      if (year && month && day) {
+        const current = new Date(match.starts_at || new Date());
+        current.setFullYear(year);
+        current.setMonth(month - 1);
+        current.setDate(day);
+        setMatch({ ...match, starts_at: current.toISOString() });
+      }
     }
+    setShowDateModal(false);
+  };
+
+  const handleTimeSave = () => {
+    if (tempTime) {
+      const [hours, minutes] = tempTime.split(':').map(Number);
+      if (hours !== undefined && minutes !== undefined) {
+        const current = new Date(match.starts_at || new Date());
+        current.setHours(hours);
+        current.setMinutes(minutes);
+        setMatch({ ...match, starts_at: current.toISOString() });
+      }
+    }
+    setShowTimeModal(false);
+  };
+
+  const openDateModal = () => {
+    const date = new Date(match.starts_at || new Date());
+    setTempDate(formatDateForInput(date));
+    setShowDateModal(true);
+  };
+
+  const openTimeModal = () => {
+    const date = new Date(match.starts_at || new Date());
+    setTempTime(formatTimeForInput(date));
+    setShowTimeModal(true);
   };
 
   return (
@@ -283,7 +315,7 @@ const MatchEditScreen: React.FC = () => {
               <View style={styles.dateTimeContainer}>
                 <Button
                   mode="outlined"
-                  onPress={() => setShowDatePicker(true)}
+                  onPress={openDateModal}
                   style={styles.dateButton}
                   textColor="#ffffff"
                 >
@@ -291,31 +323,13 @@ const MatchEditScreen: React.FC = () => {
                 </Button>
                 <Button
                   mode="outlined"
-                  onPress={() => setShowTimePicker(true)}
+                  onPress={openTimeModal}
                   style={styles.dateButton}
                   textColor="#ffffff"
                 >
-                  {new Date(match.starts_at || new Date()).toLocaleTimeString()}
+                  {new Date(match.starts_at || new Date()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </Button>
               </View>
-
-              {showDatePicker && (
-                <DateTimePicker
-                  value={new Date(match.starts_at || new Date())}
-                  mode="date"
-                  display="default"
-                  onChange={handleDateChange}
-                />
-              )}
-
-              {showTimePicker && (
-                <DateTimePicker
-                  value={new Date(match.starts_at || new Date())}
-                  mode="time"
-                  display="default"
-                  onChange={handleTimeChange}
-                />
-              )}
             </Card.Content>
           </Card>
 
@@ -441,6 +455,76 @@ const MatchEditScreen: React.FC = () => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <Portal>
+        <Modal
+          visible={showDateModal}
+          onDismiss={() => setShowDateModal(false)}
+          contentContainerStyle={styles.modalContent}
+        >
+          <Title style={styles.modalTitle}>Выберите дату</Title>
+          <TextInput
+            label="Дата (ГГГГ-ММ-ДД)"
+            value={tempDate}
+            onChangeText={setTempDate}
+            style={styles.modalInput}
+            mode="outlined"
+            placeholder="2024-12-25"
+            theme={{ colors: { background: '#1a1a1a', text: '#ffffff' } }}
+          />
+          <View style={styles.modalButtons}>
+            <Button
+              mode="text"
+              onPress={() => setShowDateModal(false)}
+              textColor="#999999"
+            >
+              Отмена
+            </Button>
+            <Button
+              mode="contained"
+              onPress={handleDateSave}
+              buttonColor="#ffffff"
+              textColor="#000000"
+            >
+              Сохранить
+            </Button>
+          </View>
+        </Modal>
+
+        <Modal
+          visible={showTimeModal}
+          onDismiss={() => setShowTimeModal(false)}
+          contentContainerStyle={styles.modalContent}
+        >
+          <Title style={styles.modalTitle}>Выберите время</Title>
+          <TextInput
+            label="Время (ЧЧ:ММ)"
+            value={tempTime}
+            onChangeText={setTempTime}
+            style={styles.modalInput}
+            mode="outlined"
+            placeholder="14:30"
+            theme={{ colors: { background: '#1a1a1a', text: '#ffffff' } }}
+          />
+          <View style={styles.modalButtons}>
+            <Button
+              mode="text"
+              onPress={() => setShowTimeModal(false)}
+              textColor="#999999"
+            >
+              Отмена
+            </Button>
+            <Button
+              mode="contained"
+              onPress={handleTimeSave}
+              buttonColor="#ffffff"
+              textColor="#000000"
+            >
+              Сохранить
+            </Button>
+          </View>
+        </Modal>
+      </Portal>
     </SafeAreaView>
   );
 };
@@ -516,6 +600,27 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     paddingVertical: 8,
+  },
+  modalContent: {
+    backgroundColor: '#1a1a1a',
+    padding: 20,
+    margin: 20,
+    borderRadius: 8,
+  },
+  modalTitle: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  modalInput: {
+    marginBottom: 16,
+    backgroundColor: '#1a1a1a',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 12,
   },
 });
 

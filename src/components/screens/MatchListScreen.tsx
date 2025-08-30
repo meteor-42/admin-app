@@ -19,7 +19,7 @@ import { useNavigation } from '@react-navigation/native';
 import { usePocketBase } from '../contexts/PocketBaseContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Match } from '../types';
-import MatchCard from '../components/MatchCard';
+import MatchCard from '../MatchCard';
 
 const MatchListScreen: React.FC = () => {
   const navigation = useNavigation();
