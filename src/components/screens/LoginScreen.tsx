@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import { globalStyles } from '../../../theme/globalStyles';
+import { colors, spacing, borderRadius, typography } from '../../../theme/colors';
 
 const LoginScreen: React.FC = () => {
   const navigation = useNavigation();
