@@ -6,9 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
-    "platforms": [
-      "android"
-    ],
+    "platforms": ["android"],
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -20,7 +18,6 @@
         "backgroundColor": "#000000"
       },
       "package": "com.ludic.admin",
-      "versionCode": 1,
       "permissions": [
         "INTERNET",
         "ACCESS_NETWORK_STATE"
@@ -28,8 +25,7 @@
       "compileSdkVersion": 34,
       "targetSdkVersion": 34,
       "buildToolsVersion": "34.0.0",
-      "usesCleartextTraffic": true,
-      "networkSecurityConfig": "./network_security_config.xml"
+      "usesCleartextTraffic": true
     },
     "build": {
       "development": {
@@ -45,11 +41,6 @@
         "android": {
           "buildType": "aab"
         }
-      }
-    },
-    "extra": {
-      "eas": {
-        "projectId": "76af4aec-8ee5-4696-96c7-f97657d3a85e"
       }
     }
   }
