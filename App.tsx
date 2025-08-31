@@ -2,7 +2,7 @@ import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { Provider as PaperProvider, MD3DarkTheme } from 'react-native-paper';
+import { Provider as PaperProvider } from 'react-native-paper';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-gesture-handler';
 
@@ -14,41 +14,10 @@ import { AuthProvider, useAuth } from './src/components/contexts/AuthContext';
 import LoginScreen from './src/components/screens/LoginScreen';
 import MatchListScreen from './src/components/screens/MatchListScreen';
 
-// Import theme
+// Import styles
 import { colors } from './theme/theme';
 
 const Stack = createStackNavigator();
-
-// Кастомная темная тема
-const theme = {
-  ...MD3DarkTheme,
-  colors: {
-    ...MD3DarkTheme.colors,
-    primary: colors.primary,
-    onPrimary: colors.primaryForeground,
-    primaryContainer: colors.secondary,
-    onPrimaryContainer: colors.secondaryForeground,
-    secondary: colors.secondary,
-    onSecondary: colors.secondaryForeground,
-    secondaryContainer: colors.muted,
-    onSecondaryContainer: colors.mutedForeground,
-    background: colors.background,
-    onBackground: colors.foreground,
-    surface: colors.card,
-    onSurface: colors.cardForeground,
-    surfaceVariant: colors.muted,
-    onSurfaceVariant: colors.mutedForeground,
-    outline: colors.border,
-    elevation: {
-      level0: 'transparent',
-      level1: colors.card,
-      level2: colors.card,
-      level3: colors.card,
-      level4: colors.card,
-      level5: colors.card,
-    },
-  },
-};
 
 function AppNavigator() {
   const { user, isLoading } = useAuth();
@@ -96,7 +65,7 @@ function AppNavigator() {
 export default function App() {
   return (
     <SafeAreaProvider>
-      <PaperProvider theme={theme}>
+      <PaperProvider>
         <PocketBaseProvider>
           <AuthProvider>
             <NavigationContainer>

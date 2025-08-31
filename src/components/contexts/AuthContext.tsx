@@ -108,9 +108,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         message: error?.message,
         status: error?.status,
         data: error?.data,
-        url: error?.url
+        url: error?.url,
+        name: error?.name
       });
-      throw error;
+
+      // Улучшенная обработка сетевых ошибок
+      let userFriendlyMessage = 'Ошибка авторизации';
+
+      if (error?.name === 'TypeError' && error?.message?.includes('fetch')) {
+        userFriendlyMessage = 'Проблема с сетью. Проверьте интернет соединение.';
+        console.error('🌐 [login] Сетевая ошибка - сервер недоступен');
+      } else if (error?.status === 400) {
+        userFriendlyMessage = 'Неверный email или пароль';
+      } else if (error?.status === 0 || error?.message?.includes('Network request failed')) {
+        userFriendlyMessage = 'Сервер недоступен. Проверьте подключение к интернету.';
+        console.error('🌐 [login] Сетевая ошибка - нет подключения к серверу');
+      } else if (error?.status >= 500) {
+        userFriendlyMessage = 'Ошибка сервера. Попробуйте позже.';
+      }
+
+      // Создаем новую ошибку с понятным сообщением
+      const friendlyError = new Error(userFriendlyMessage);
+      (friendlyError as any).originalError = error;
+      throw friendlyError;
     }
   };
 
