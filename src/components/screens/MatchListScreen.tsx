@@ -25,6 +25,7 @@ const MatchListScreen: React.FC = () => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<'live' | 'upcoming' | 'completed' | 'cancelled' | 'all'>('live');
 
   // Используем ref для отслеживания монтирования компонента
   const isMounted = useRef(true);
@@ -236,6 +237,8 @@ const MatchListScreen: React.FC = () => {
     );
   }
 
+  const filtered = matches.filter((m) => (statusFilter === 'all' ? true : m.status === statusFilter));
+
   return (
     <SafeAreaView style={globalStyles.container}>
       {/* Custom Header with logout icon */}
@@ -250,15 +253,38 @@ const MatchListScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
+      {/* Фильтры статуса */}
+      <View style={{ flexDirection: 'row', paddingHorizontal: 12, paddingVertical: 8, gap: 8 }}>
+        {(['live', 'upcoming', 'completed', 'cancelled', 'all'] as const).map((st) => (
+          <TouchableOpacity
+            key={st}
+            onPress={() => setStatusFilter(st)}
+            activeOpacity={0.7}
+            style={{
+              paddingHorizontal: 10,
+              paddingVertical: 6,
+              borderRadius: 6,
+              borderWidth: 1,
+              borderColor: statusFilter === st ? '#FFFFFF' : '#333333',
+              backgroundColor: statusFilter === st ? '#111111' : '#0b0b0b',
+            }}
+          >
+            <Text style={{ color: '#fff', fontSize: 12 }}>
+              {st === 'all' ? 'Все' : st === 'live' ? 'LIVE' : st === 'upcoming' ? 'Ожидается' : st === 'completed' ? 'Завершен' : 'Отменен'}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
       {/* Match List */}
       <FlatList
-        data={matches}
+        data={filtered}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
+        renderItem={({ item, index }) => (
           <MatchCard
             match={item}
-            onPress={() => {}} // Убрано редактирование
+            onPress={() => {}}
+            index={index}
           />
         )}
         refreshControl={
