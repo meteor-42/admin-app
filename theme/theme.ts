@@ -237,19 +237,19 @@ export const globalStyles = StyleSheet.create({
     fontWeight: typography.fontWeight.semibold,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    color: colors.mutedForeground,
+
   },
   statusLive: {
-    backgroundColor: colors.status.live,
+    color: colors.status.live,
   },
   statusFinished: {
-    backgroundColor: colors.status.completed,
+    color: colors.status.completed,
   },
   statusUpcoming: {
-    backgroundColor: colors.status.upcoming,
+    color: colors.status.upcoming,
   },
   statusCancelled: {
-    backgroundColor: colors.status.cancelled,
+    color: colors.status.cancelled,
   },
 
   // List styles
