@@ -8,9 +8,6 @@ export interface Match {
   status: 'upcoming' | 'live' | 'completed' | 'cancelled';
   home_score?: number;
   away_score?: number;
-  odd_home?: number;
-  odd_draw?: number;
-  odd_away?: number;
 }
 
 export interface User {
