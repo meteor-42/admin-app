@@ -262,7 +262,7 @@ const MatchListScreen: React.FC = () => {
           onPress={handleLogout}
           activeOpacity={0.7}
         >
-          <Text style={[globalStyles.logoutIcon, { fontSize: 22 }]}>⇥</Text>
+          <Text style={[globalStyles.logoutIcon, { fontSize: 14, fontWeight: '700', letterSpacing: 1 }]}>ВЫХОД</Text>
         </TouchableOpacity>
       </View>
 
