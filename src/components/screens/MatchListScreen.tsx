@@ -23,8 +23,9 @@ import { usePocketBase } from '../contexts/PocketBaseContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Match, MatchStatus } from '../types';
 import MatchCard from '../MatchCard';
-import { globalStyles, colors } from '../../../theme/theme';
+import { globalStyles, colors, spacing, typography, borderRadius } from '../../../theme/theme';
 import { ApiError } from '../types';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const MatchListScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -35,8 +36,8 @@ const MatchListScreen: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [statusFilter, setStatusFilter] = useState<'live' | 'upcoming' | 'completed' | 'cancelled'>('upcoming');
 
-  // Modal state
-  const [editVisible, setEditVisible] = useState(false);
+  // Modal state - исправлено управление состоянием
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [editing, setEditing] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [editStatus, setEditStatus] = useState<MatchStatus>('completed');
@@ -73,7 +74,7 @@ const MatchListScreen: React.FC = () => {
       isMounted.current = false;
       clearTimeout(timeoutId);
     };
-  }, [loadMatches, pb.authStore.isValid, pb.authStore.token]);
+  }, []);
 
   // Перезагрузка при смене фильтра
   useEffect(() => {
@@ -81,7 +82,7 @@ const MatchListScreen: React.FC = () => {
       setLoading(true);
       loadMatches();
     }
-  }, [statusFilter, loadMatches]);
+  }, [statusFilter]);
 
   const loadMatches = useCallback(async (attempt = 1) => {
     const maxAttempts = 3;
@@ -241,32 +242,27 @@ const MatchListScreen: React.FC = () => {
 
   // Handlers for editing
   const openEdit = (match: Match) => {
-    // Редактирование разрешено для любого текущего фильтра
     setSelectedMatch(match);
     setEditStatus(match.status);
     setHomeScore(match.home_score !== undefined ? String(match.home_score) : '0');
     setAwayScore(match.away_score !== undefined ? String(match.away_score) : '0');
-    setEditVisible(true);
+    setIsEditModalVisible(true);
   };
 
   const closeEdit = () => {
     if (editing) return;
-    setEditVisible(false);
+    setIsEditModalVisible(false);
     setSelectedMatch(null);
+    setStatusMenuVisible(false);
   };
 
-  // Enable swipe-to-dismiss like behavior by allowing tap on backdrop and vertical drag hint
   const onDismissRequest = () => {
     if (!editing) closeEdit();
   };
 
   const saveEdit = async () => {
     if (!selectedMatch) return;
-    // Валидация: счет можно менять только если статус completed
-    if (editStatus !== 'completed') {
-      // При смене статуса на не-completed обнулять счет? Оставим как есть, но не даем вводить
-    }
-
+    
     // Валидация чисел
     const hs = Number(homeScore);
     const as = Number(awayScore);
@@ -288,8 +284,7 @@ const MatchListScreen: React.FC = () => {
 
       // Обновляем локальный список оптимистично
       setMatches((prev) => prev.map((m) => (m.id === selectedMatch.id ? { ...m, ...payload } as Match : m)));
-      setSelectedMatch({ ...selectedMatch, ...payload } as Match);
-      setEditVisible(false);
+      closeEdit();
     } catch (error: unknown) {
       const apiError = error as ApiError;
       Alert.alert('Ошибка сохранения', apiError.message || 'Не удалось сохранить изменения');
@@ -306,7 +301,7 @@ const MatchListScreen: React.FC = () => {
     );
   }
 
-  const filtered = matches.filter((m) => ( m.status === statusFilter));
+  const filtered = matches.filter((m) => m.status === statusFilter);
 
   return (
     <SafeAreaView style={globalStyles.container}>
@@ -316,7 +311,6 @@ const MatchListScreen: React.FC = () => {
           onPress={handleLogout}
           activeOpacity={0.7}
         >
-          {/* Простая и центрированная стрелка выхода */}
           <Text style={{
             fontSize: 14,
             color: colors.zinc[300],
@@ -340,11 +334,14 @@ const MatchListScreen: React.FC = () => {
               paddingHorizontal: 12,
               paddingVertical: 6,
               borderWidth: 1,
-              borderColor: statusFilter === st ? '#FFFFFF' : '#333333',
-              backgroundColor: statusFilter === st ? '#111111' : '#0b0b0b',
+              borderColor: statusFilter === st ? colors.primary : colors.border,
+              backgroundColor: statusFilter === st ? colors.primary : colors.input,
             }}
           >
-            <Text style={{ color: '#fff', fontSize: 14 }}>
+            <Text style={{ 
+              color: statusFilter === st ? colors.primaryForeground : colors.foreground, 
+              fontSize: 14 
+            }}>
               {st === 'live' ? 'Live' : st === 'upcoming' ? 'Ожидается' : st === 'completed' ? 'Завершен' : 'Отменен'}
             </Text>
           </TouchableOpacity>
@@ -366,15 +363,15 @@ const MatchListScreen: React.FC = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            colors={['#ffffff']}
-            tintColor={'#ffffff'}
+            colors={[colors.primary]}
+            tintColor={colors.primary}
           />
         }
         contentContainerStyle={[globalStyles.listContent, filtered.length === 0 ? { flex: 1, justifyContent: 'center' } : undefined]}
         ListEmptyComponent={
           <View style={{ alignItems: 'center', paddingHorizontal: 24 }}>
-            <Text style={{ fontSize: 42, color: '#444', marginBottom: 8 }}>⚽</Text>
-            <Text style={{ fontSize: 14, color: '#9ca3af' }}>Ничего не найдено</Text>
+            <Text style={{ fontSize: 42, color: colors.zinc[600], marginBottom: 8 }}>⚽</Text>
+            <Text style={{ fontSize: 14, color: colors.mutedForeground }}>Ничего не найдено</Text>
           </View>
         }
       />
@@ -382,35 +379,64 @@ const MatchListScreen: React.FC = () => {
       {/* Edit Modal */}
       <Portal>
         <Modal
-          visible={editVisible}
+          visible={isEditModalVisible}
           onDismiss={onDismissRequest}
-          dismissable
-          dismissableBackButton
+          dismissable={!editing}
+          dismissableBackButton={!editing}
           contentContainerStyle={{
-            backgroundColor: '#0a0a0a',
-            borderColor: '#1f1f1f',
+            backgroundColor: colors.card,
+            borderColor: colors.border,
             borderWidth: 1,
-            padding: 16,
-            marginHorizontal: 16,
-            marginVertical: 24,
-            borderRadius: 12,
+            padding: spacing.md,
+            marginHorizontal: spacing.md,
+            marginVertical: spacing.xl,
+            borderRadius: borderRadius.lg,
           }}
         >
           {/* Handle area for swipe affordance */}
-          <View style={{ alignItems: 'center', marginBottom: 12 }}>
-            <View style={{ height: 4, width: 44, borderRadius: 2, backgroundColor: '#2a2a2a' }} />
+          <View style={{ alignItems: 'center', marginBottom: spacing.sm }}>
+            <View style={{ 
+              height: 4, 
+              width: 44, 
+              borderRadius: 2, 
+              backgroundColor: colors.zinc[700] 
+            }} />
           </View>
-          <KeyboardAvoidingView behavior={Platform.select({ ios: 'padding', android: undefined })}>
-            <Text style={{ color: '#fff', fontSize: 18, fontWeight: '600', marginBottom: 8 }}>Редактирование матча</Text>
+          
+          <KeyboardAvoidingView 
+            behavior={Platform.select({ ios: 'padding', android: undefined })}
+          >
+            <Text style={{ 
+              color: colors.foreground, 
+              fontSize: typography.fontSize.lg, 
+              fontWeight: typography.fontWeight.semibold, 
+              marginBottom: spacing.sm 
+            }}>
+              Редактирование матча
+            </Text>
+            
             {selectedMatch && (
               <View>
-                <Text style={{ color: '#9ca3af', marginBottom: 12 }}>
-                  {selectedMatch.home_team} <Text style={{ color: '#6b7280' }}>vs</Text> {selectedMatch.away_team}
+                <Text style={{ 
+                  color: colors.mutedForeground, 
+                  marginBottom: spacing.md,
+                  fontSize: typography.fontSize.sm
+                }}>
+                  {selectedMatch.home_team} <Text style={{ color: colors.zinc[500] }}>vs</Text> {selectedMatch.away_team}
                 </Text>
 
                 {/* Статус (dropdown) */}
-                <Text style={{ color: '#e5e7eb', marginTop: 4, marginBottom: 6, fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.6 }}>Статус</Text>
-                <View style={{ alignSelf: 'stretch' }}>
+                <Text style={{ 
+                  color: colors.mutedForeground, 
+                  marginBottom: spacing.xs, 
+                  fontSize: typography.fontSize.xs, 
+                  textTransform: 'uppercase', 
+                  letterSpacing: 0.6 
+                }}>
+                  Статус
+                </Text>
+                
+                <View style={{ alignSelf: 'stretch', marginBottom: spacing.md }}>
                   <Menu
                     visible={statusMenuVisible}
                     onDismiss={() => setStatusMenuVisible(false)}
@@ -418,65 +444,270 @@ const MatchListScreen: React.FC = () => {
                       <TouchableOpacity
                         onPress={() => setStatusMenuVisible(true)}
                         activeOpacity={0.7}
+                        disabled={editing}
                         style={{
                           borderWidth: 1,
-                          borderColor: '#1f1f1f',
-                          backgroundColor: '#0f0f0f',
-                          paddingHorizontal: 12,
-                          paddingVertical: 12,
-                          borderRadius: 8,
+                          borderColor: colors.border,
+                          backgroundColor: colors.input,
+                          paddingHorizontal: spacing.md,
+                          paddingVertical: spacing.sm,
+                          borderRadius: borderRadius.md,
+                          flexDirection: 'row',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          opacity: editing ? 0.6 : 1,
                         }}
                       >
-                        <Text style={{ color: '#d1d5db', fontSize: 14 }}>{editStatus}</Text>
+                        <Text style={{ 
+                          color: colors.foreground, 
+                          fontSize: typography.fontSize.sm 
+                        }}>
+                          {editStatus === 'live' ? 'Live' : 
+                           editStatus === 'upcoming' ? 'Ожидается' : 
+                           editStatus === 'completed' ? 'Завершен' : 'Отменен'}
+                        </Text>
+                        <Icon 
+                          name={statusMenuVisible ? 'arrow-drop-up' : 'arrow-drop-down'} 
+                          size={20} 
+                          color={colors.mutedForeground} 
+                        />
                       </TouchableOpacity>
                     }
-                    contentStyle={{ backgroundColor: '#0a0a0a' }}
+                    contentStyle={{ 
+                      backgroundColor: colors.card,
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                      borderRadius: borderRadius.md,
+                    }}
                   >
                     {(['upcoming', 'live', 'completed', 'cancelled'] as const).map((st) => (
                       <Menu.Item
                         key={st}
-                        onPress={() => { setEditStatus(st); setStatusMenuVisible(false); }}
-                        title={st}
-                        titleStyle={{ color: '#e5e7eb' }}
+                        onPress={() => { 
+                          setEditStatus(st); 
+                          setStatusMenuVisible(false); 
+                          // При смене статуса с completed сбрасываем счет
+                          if (st !== 'completed') {
+                            setHomeScore('0');
+                            setAwayScore('0');
+                          }
+                        }}
+                        title={st === 'live' ? 'Live' : 
+                               st === 'upcoming' ? 'Ожидается' : 
+                               st === 'completed' ? 'Завершен' : 'Отменен'}
+                        titleStyle={{ 
+                          color: colors.foreground,
+                          fontSize: typography.fontSize.sm
+                        }}
+                        style={{
+                          backgroundColor: editStatus === st ? colors.zinc[800] : 'transparent',
+                        }}
                       />)
                     )}
                   </Menu>
                 </View>
 
                 {/* Счет: только если completed */}
-                <Text style={{ color: '#e5e7eb', marginTop: 12, marginBottom: 6, fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.6 }}>Счет (только для завершенных)</Text>
-                <View style={{ flexDirection: 'row', gap: 8 }}>
-                  <TextInput
-                    mode="flat"
-                    label="Домашние"
-                    value={homeScore}
-                    onChangeText={setHomeScore}
-                    keyboardType="number-pad"
-                    disabled={editStatus !== 'completed'}
-                    style={{ flex: 1, backgroundColor: '#0f0f0f' }}
-                    underlineColor="#2a2a2a"
-                    textColor="#ffffff"
-                    theme={{ colors: { primary: '#ffffff', onSurfaceVariant: '#9ca3af' } }}
-                  />
-                  <TextInput
-                    mode="flat"
-                    label="Гости"
-                    value={awayScore}
-                    onChangeText={setAwayScore}
-                    keyboardType="number-pad"
-                    disabled={editStatus !== 'completed'}
-                    style={{ flex: 1, backgroundColor: '#0f0f0f' }}
-                    underlineColor="#2a2a2a"
-                    textColor="#ffffff"
-                    theme={{ colors: { primary: '#ffffff', onSurfaceVariant: '#9ca3af' } }}
-                  />
-                </View>
+                {editStatus === 'completed' && (
+                  <View>
+                    <Text style={{ 
+                      color: colors.mutedForeground, 
+                      marginBottom: spacing.xs, 
+                      fontSize: typography.fontSize.xs, 
+                      textTransform: 'uppercase', 
+                      letterSpacing: 0.6 
+                    }}>
+                      Счет
+                    </Text>
+                    
+                    <View style={{ 
+                      flexDirection: 'row', 
+                      gap: spacing.md,
+                      marginBottom: spacing.md 
+                    }}>
+                      {/* Домашние */}
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ 
+                          color: colors.mutedForeground, 
+                          marginBottom: spacing.xs, 
+                          fontSize: typography.fontSize.xs 
+                        }}>
+                          Домашние
+                        </Text>
+                        <View style={{ 
+                          flexDirection: 'row', 
+                          alignItems: 'center',
+                          borderWidth: 1,
+                          borderColor: colors.border,
+                          borderRadius: borderRadius.md,
+                          backgroundColor: colors.input,
+                          overflow: 'hidden',
+                        }}>
+                          <TouchableOpacity
+                            onPress={() => {
+                              const newScore = Math.max(0, parseInt(homeScore || '0') - 1);
+                              setHomeScore(String(newScore));
+                            }}
+                            style={{
+                              padding: spacing.sm,
+                              backgroundColor: colors.zinc[800],
+                            }}
+                            activeOpacity={0.7}
+                            disabled={editing}
+                          >
+                            <Icon name="remove" size={20} color={colors.foreground} />
+                          </TouchableOpacity>
+                          
+                          <TextInput
+                            mode="flat"
+                            value={homeScore}
+                            onChangeText={(text) => {
+                              // Разрешаем только цифры
+                              if (/^\d*$/.test(text)) {
+                                setHomeScore(text);
+                              }
+                            }}
+                            keyboardType="number-pad"
+                            style={{ 
+                              flex: 1, 
+                              backgroundColor: 'transparent',
+                              textAlign: 'center',
+                              height: 44,
+                            }}
+                            underlineColor="transparent"
+                            textColor={colors.foreground}
+                            theme={{ 
+                              colors: { 
+                                primary: colors.primary, 
+                                onSurface: colors.foreground,
+                                onSurfaceVariant: colors.mutedForeground 
+                              } 
+                            }}
+                            editable={!editing}
+                          />
+                          
+                          <TouchableOpacity
+                            onPress={() => {
+                              const newScore = parseInt(homeScore || '0') + 1;
+                              setHomeScore(String(newScore));
+                            }}
+                            style={{
+                              padding: spacing.sm,
+                              backgroundColor: colors.zinc[800],
+                            }}
+                            activeOpacity={0.7}
+                            disabled={editing}
+                          >
+                            <Icon name="add" size={20} color={colors.foreground} />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
 
-                <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 18, gap: 8 }}>
-                  <Button onPress={closeEdit} disabled={editing} textColor="#e5e7eb">
+                      {/* Гости */}
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ 
+                          color: colors.mutedForeground, 
+                          marginBottom: spacing.xs, 
+                          fontSize: typography.fontSize.xs 
+                        }}>
+                          Гости
+                        </Text>
+                        <View style={{ 
+                          flexDirection: 'row', 
+                          alignItems: 'center',
+                          borderWidth: 1,
+                          borderColor: colors.border,
+                          borderRadius: borderRadius.md,
+                          backgroundColor: colors.input,
+                          overflow: 'hidden',
+                        }}>
+                          <TouchableOpacity
+                            onPress={() => {
+                              const newScore = Math.max(0, parseInt(awayScore || '0') - 1);
+                              setAwayScore(String(newScore));
+                            }}
+                            style={{
+                              padding: spacing.sm,
+                              backgroundColor: colors.zinc[800],
+                            }}
+                            activeOpacity={0.7}
+                            disabled={editing}
+                          >
+                            <Icon name="remove" size={20} color={colors.foreground} />
+                          </TouchableOpacity>
+                          
+                          <TextInput
+                            mode="flat"
+                            value={awayScore}
+                            onChangeText={(text) => {
+                              if (/^\d*$/.test(text)) {
+                                setAwayScore(text);
+                              }
+                            }}
+                            keyboardType="number-pad"
+                            style={{ 
+                              flex: 1, 
+                              backgroundColor: 'transparent',
+                              textAlign: 'center',
+                              height: 44,
+                            }}
+                            underlineColor="transparent"
+                            textColor={colors.foreground}
+                            theme={{ 
+                              colors: { 
+                                primary: colors.primary, 
+                                onSurface: colors.foreground,
+                                onSurfaceVariant: colors.mutedForeground 
+                              } 
+                            }}
+                            editable={!editing}
+                          />
+                          
+                          <TouchableOpacity
+                            onPress={() => {
+                              const newScore = parseInt(awayScore || '0') + 1;
+                              setAwayScore(String(newScore));
+                            }}
+                            style={{
+                              padding: spacing.sm,
+                              backgroundColor: colors.zinc[800],
+                            }}
+                            activeOpacity={0.7}
+                            disabled={editing}
+                          >
+                            <Icon name="add" size={20} color={colors.foreground} />
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                )}
+
+                <View style={{ 
+                  flexDirection: 'row', 
+                  justifyContent: 'flex-end', 
+                  marginTop: spacing.md, 
+                  gap: spacing.sm 
+                }}>
+                  <Button 
+                    onPress={closeEdit} 
+                    disabled={editing} 
+                    textColor={colors.mutedForeground}
+                    style={{ borderRadius: borderRadius.md }}
+                  >
                     Отмена
                   </Button>
-                  <Button mode="contained" onPress={saveEdit} loading={editing} disabled={editing} style={{ backgroundColor: '#111111' }}>
+                  <Button 
+                    mode="contained" 
+                    onPress={saveEdit} 
+                    loading={editing} 
+                    disabled={editing} 
+                    style={{ 
+                      backgroundColor: colors.primary,
+                      borderRadius: borderRadius.md,
+                    }}
+                    labelStyle={{ color: colors.primaryForeground }}
+                  >
                     Сохранить
                   </Button>
                 </View>
