@@ -24,3 +24,21 @@ export interface AuthState {
 }
 
 export type MatchStatus = 'upcoming' | 'live' | 'completed' | 'cancelled';
+
+// Error handling types
+export interface ApiError extends Error {
+  status?: number;
+  data?: unknown;
+  url?: string;
+  originalError?: Error;
+}
+
+export interface NetworkError extends Error {
+  status: 0;
+  message: string;
+}
+
+export interface ServerError extends Error {
+  status: number;
+  data?: unknown;
+}

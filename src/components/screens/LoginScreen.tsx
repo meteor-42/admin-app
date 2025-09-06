@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import { globalStyles, colors } from '../../../theme/theme';
+import { ApiError } from '../types';
 
 const LoginScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -75,15 +76,16 @@ const LoginScreen: React.FC = () => {
 
       // Более детальная обработка ошибок
       let errorMessage = 'Неправильный email или пароль';
+      const apiError = error as ApiError;
 
-      if ((error as any)?.status === 0 || (error as any)?.message?.includes('Network')) {
+      if (apiError.status === 0 || apiError.message?.includes('Network')) {
         errorMessage = 'Проблема с сетью. Проверьте интернет соединение.';
-      } else if ((error as any)?.status === 400) {
+      } else if (apiError.status === 400) {
         errorMessage = 'Неверный email или пароль';
-      } else if ((error as any)?.status >= 500) {
+      } else if (apiError.status && apiError.status >= 500) {
         errorMessage = 'Сервер временно недоступен. Попробуйте позже.';
-      } else if ((error as any)?.message) {
-        errorMessage = (error as any).message;
+      } else if (apiError.message) {
+        errorMessage = apiError.message;
       }
 
       Alert.alert('Ошибка входа', errorMessage);

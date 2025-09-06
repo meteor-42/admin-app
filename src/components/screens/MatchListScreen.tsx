@@ -17,6 +17,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Match } from '../types';
 import MatchCard from '../MatchCard';
 import { globalStyles, colors } from '../../../theme/theme';
+import { ApiError } from '../types';
 
 const MatchListScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -141,17 +142,19 @@ const MatchListScreen: React.FC = () => {
 
       console.error(`❌ [loadMatches] Ошибка на попытке ${attempt}:`, error);
       if (__DEV__) {
+        const apiError = error as ApiError;
         console.warn(`🔍 [loadMatches] Детали ошибки:`, {
-          message: (error as any)?.message,
-          status: (error as any)?.status,
-          data: (error as any)?.data,
-          url: (error as any)?.url,
+          message: apiError.message,
+          status: apiError.status,
+          data: apiError.data,
+          url: apiError.url,
         });
       }
 
       // Определяем тип ошибки для лучшего retry
-      const isNetworkError = (error as any)?.status === 0 || (error as any)?.message?.includes('Network') || (error as any)?.message?.includes('timeout');
-      const isServerError = (error as any)?.status >= 500;
+      const apiError = error as ApiError;
+      const isNetworkError = apiError.status === 0 || apiError.message?.includes('Network') || apiError.message?.includes('timeout');
+      const isServerError = apiError.status !== undefined && apiError.status >= 500;
 
       const shouldRetry = isNetworkError || isServerError;
 
@@ -173,12 +176,12 @@ const MatchListScreen: React.FC = () => {
         let errorMessage = 'Неизвестная ошибка';
         if (isNetworkError) {
           errorMessage = 'Проблема с сетью. Проверьте интернет соединение.';
-        } else if ((error as any)?.status === 401) {
+        } else if (apiError.status === 401) {
           errorMessage = 'Ошибка авторизации. Попробуйте войти заново.';
-        } else if ((error as any)?.status >= 500) {
+        } else if (apiError.status && apiError.status >= 500) {
           errorMessage = 'Сервер временно недоступен. Попробуйте позже.';
-        } else if ((error as any)?.message) {
-          errorMessage = (error as any).message;
+        } else if (apiError.message) {
+          errorMessage = apiError.message;
         }
 
         Alert.alert('Ошибка загрузки', errorMessage);

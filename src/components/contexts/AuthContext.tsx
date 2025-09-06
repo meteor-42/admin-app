@@ -1,15 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { usePocketBase } from './PocketBaseContext';
-import { User, AuthState } from '../types';
+import { User, AuthState, ApiError } from '../types';
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
 interface AuthContextType extends AuthState {
+  // eslint-disable-next-line no-unused-vars
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
 }
-/* eslint-enable @typescript-eslint/no-unused-vars */
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -81,9 +80,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error: unknown) {
       console.error('❌ [checkAuth] Ошибка проверки аутентификации:', error);
       if (__DEV__) {
+        const apiError = error as ApiError;
         console.warn('🔍 [checkAuth] Детали ошибки:', {
-          message: (error as any)?.message,
-          stack: (error as any)?.stack
+          message: apiError.message,
+          stack: apiError.stack
         });
       }
       setAuthState(prev => ({ ...prev, isLoading: false }));
@@ -134,34 +134,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error: unknown) {
       console.error('❌ [login] Ошибка авторизации:', error);
       if (__DEV__) {
+        const apiError = error as ApiError;
         console.warn('🔍 [login] Детали ошибки:', {
-          // narrow as any for logging only
-          message: (error as any)?.message,
-          status: (error as any)?.status,
-          data: (error as any)?.data,
-          url: (error as any)?.url,
-          name: (error as any)?.name
+          // narrow as ApiError for logging only
+          message: apiError.message,
+          status: apiError.status,
+          data: apiError.data,
+          url: apiError.url,
+          name: apiError.name
         });
       }
 
       // Улучшенная обработка сетевых ошибок
       let userFriendlyMessage = 'Ошибка авторизации';
+      const apiError = error as ApiError;
 
-      if ((error as any)?.name === 'TypeError' && (error as any)?.message?.includes('fetch')) {
+      if (apiError.name === 'TypeError' && apiError.message?.includes('fetch')) {
         userFriendlyMessage = 'Проблема с сетью. Проверьте интернет соединение.';
         console.error('🌐 [login] Сетевая ошибка - сервер недоступен');
-      } else if ((error as any)?.status === 400) {
+      } else if (apiError.status === 400) {
         userFriendlyMessage = 'Неверный email или пароль';
-      } else if ((error as any)?.status === 0 || (error as any)?.message?.includes('Network request failed')) {
+      } else if (apiError.status === 0 || apiError.message?.includes('Network request failed')) {
         userFriendlyMessage = 'Сервер недоступен. Проверьте подключение к интернету.';
         console.error('🌐 [login] Сетевая ошибка - нет подключения к серверу');
-      } else if ((error as any)?.status >= 500) {
+      } else if (apiError.status && apiError.status >= 500) {
         userFriendlyMessage = 'Ошибка сервера. Попробуйте позже.';
       }
 
       // Создаем новую ошибку с понятным сообщением
-      const friendlyError = new Error(userFriendlyMessage);
-      (friendlyError as any).originalError = error as any;
+      const friendlyError: ApiError = new Error(userFriendlyMessage) as ApiError;
+      friendlyError.originalError = error as Error;
       throw friendlyError;
     }
   };
