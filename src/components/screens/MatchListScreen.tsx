@@ -25,7 +25,7 @@ const MatchListScreen: React.FC = () => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<'live' | 'upcoming' | 'completed' | 'cancelled' | 'all'>('live');
+  const [statusFilter, setStatusFilter] = useState<'live' | 'upcoming' | 'completed' | 'cancelled'>('live');
 
   // Используем ref для отслеживания монтирования компонента
   const isMounted = useRef(true);
@@ -61,6 +61,15 @@ const MatchListScreen: React.FC = () => {
       }
     };
   }, []);
+
+  // Перезагрузка при смене фильтра
+  useEffect(() => {
+    if (!loadingRef.current && isMounted.current) {
+      setLoading(true);
+      loadMatches();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter]);
 
   const loadMatches = async (attempt = 1) => {
     const maxAttempts = 3;
@@ -123,8 +132,11 @@ const MatchListScreen: React.FC = () => {
         }
       }, 10000); // 10 секунд таймаут
 
+      // Серверная фильтрация
+      const filter = `status = "${statusFilter}"`;
       const records = await pb.collection('matches').getFullList<Match>({
         sort: '-starts_at',
+        filter,
       });
 
       clearTimeout(timeoutId);
@@ -208,6 +220,8 @@ const MatchListScreen: React.FC = () => {
     loadMatches();
   }, []);
 
+  // refresh from header removed
+
   const handleLogout = () => {
     Alert.alert(
       'Выход',
@@ -241,21 +255,20 @@ const MatchListScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={globalStyles.container}>
-      {/* Custom Header with logout icon */}
-      <View style={globalStyles.header}>
-        <View style={globalStyles.headerIcon} />
+      {/* Header with logout on the right */}
+      <View style={[globalStyles.header, { justifyContent: 'flex-end' }] }>
         <TouchableOpacity
-          style={globalStyles.headerIcon}
+          style={[globalStyles.headerIcon, { backgroundColor: '#111', borderRadius: 8 }]}
           onPress={handleLogout}
           activeOpacity={0.7}
         >
-          <Text style={globalStyles.logoutIcon}>⎋</Text>
+          <Text style={[globalStyles.logoutIcon, { fontSize: 22 }]}>⇥</Text>
         </TouchableOpacity>
       </View>
 
       {/* Фильтры статуса */}
       <View style={{ flexDirection: 'row', paddingHorizontal: 12, paddingVertical: 8, gap: 8 }}>
-        {(['live', 'upcoming', 'completed', 'cancelled', 'all'] as const).map((st) => (
+        {(['live', 'upcoming', 'completed', 'cancelled'] as const).map((st) => (
           <TouchableOpacity
             key={st}
             onPress={() => setStatusFilter(st)}
@@ -270,7 +283,7 @@ const MatchListScreen: React.FC = () => {
             }}
           >
             <Text style={{ color: '#fff', fontSize: 12 }}>
-              {st === 'all' ? 'Все' : st === 'live' ? 'LIVE' : st === 'upcoming' ? 'Ожидается' : st === 'completed' ? 'Завершен' : 'Отменен'}
+              {st === 'live' ? 'LIVE' : st === 'upcoming' ? 'Ожидается' : st === 'completed' ? 'Завершен' : 'Отменен'}
             </Text>
           </TouchableOpacity>
         ))}
@@ -295,14 +308,11 @@ const MatchListScreen: React.FC = () => {
             tintColor={'#ffffff'}
           />
         }
-        contentContainerStyle={globalStyles.listContent}
+        contentContainerStyle={[globalStyles.listContent, filtered.length === 0 ? { flex: 1, justifyContent: 'center' } : undefined]}
         ListEmptyComponent={
-          <View style={globalStyles.emptyContainer}>
-            <Text style={globalStyles.emptyIcon}>□</Text>
-            <Text style={globalStyles.emptyTitle}>Нет команд</Text>
-            <Text style={globalStyles.emptyText}>
-              Команды не найдены
-            </Text>
+          <View style={{ alignItems: 'center', paddingHorizontal: 24 }}>
+            <Text style={{ fontSize: 42, color: '#444', marginBottom: 8 }}>⚽</Text>
+            <Text style={{ fontSize: 14, color: '#9ca3af' }}>Ничего не найдено</Text>
           </View>
         }
       />
