@@ -25,7 +25,7 @@ const MatchListScreen: React.FC = () => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<'live' | 'upcoming' | 'completed' | 'cancelled'>('live');
+  const [statusFilter, setStatusFilter] = useState<'live' | 'upcoming' | 'completed' | 'cancelled'>('upcoming');
 
   // Используем ref для отслеживания монтирования компонента
   const isMounted = useRef(true);
@@ -253,7 +253,7 @@ const MatchListScreen: React.FC = () => {
 
       {/* Фильтры статуса */}
       <View style={{ flexDirection: 'row', paddingHorizontal: 12, paddingVertical: 8, gap: 8 }}>
-        {(['live', 'upcoming', 'completed', 'cancelled'] as const).map((st) => (
+        {(['upcoming', 'live', 'completed', 'cancelled'] as const).map((st) => (
           <TouchableOpacity
             key={st}
             onPress={() => setStatusFilter(st)}
