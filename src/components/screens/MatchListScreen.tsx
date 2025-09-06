@@ -16,7 +16,7 @@ import { usePocketBase } from '../contexts/PocketBaseContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Match } from '../types';
 import MatchCard from '../MatchCard';
-import { globalStyles } from '../../../theme/theme';
+import { globalStyles, colors } from '../../../theme/theme';
 
 const MatchListScreen: React.FC = () => {
   const navigation = useNavigation();
@@ -220,8 +220,6 @@ const MatchListScreen: React.FC = () => {
     loadMatches();
   }, []);
 
-  // refresh from header removed
-
   const handleLogout = () => {
     Alert.alert(
       'Выход',
@@ -256,13 +254,21 @@ const MatchListScreen: React.FC = () => {
   return (
     <SafeAreaView style={globalStyles.container}>
       {/* Header with logout on the right */}
-      <View style={[globalStyles.header, { justifyContent: 'flex-end' }] }>
+      <View style={[globalStyles.header, { justifyContent: 'flex-end' }]}>
         <TouchableOpacity
-          style={[globalStyles.headerIcon, { backgroundColor: '#111', borderRadius: 8 }]}
           onPress={handleLogout}
           activeOpacity={0.7}
         >
-          <Text style={[globalStyles.logoutIcon, { fontSize: 22 }]}>⇥</Text>
+          {/* Простая и центрированная стрелка выхода */}
+          <Text style={{ 
+            fontSize: 14, 
+            color: colors.zinc[300],
+            backgroundColor: colors.zinc[900],
+            paddingHorizontal: 12,
+            paddingVertical: 6,
+          }}>
+            Выход
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -274,16 +280,15 @@ const MatchListScreen: React.FC = () => {
             onPress={() => setStatusFilter(st)}
             activeOpacity={0.7}
             style={{
-              paddingHorizontal: 10,
+              paddingHorizontal: 12,
               paddingVertical: 6,
-              borderRadius: 6,
               borderWidth: 1,
               borderColor: statusFilter === st ? '#FFFFFF' : '#333333',
               backgroundColor: statusFilter === st ? '#111111' : '#0b0b0b',
             }}
           >
-            <Text style={{ color: '#fff', fontSize: 12 }}>
-              {st === 'live' ? 'LIVE' : st === 'upcoming' ? 'Ожидается' : st === 'completed' ? 'Завершен' : 'Отменен'}
+            <Text style={{ color: '#fff', fontSize: 14 }}>
+              {st === 'live' ? 'Live' : st === 'upcoming' ? 'Ожидается' : st === 'completed' ? 'Завершен' : 'Отменен'}
             </Text>
           </TouchableOpacity>
         ))}
@@ -316,7 +321,6 @@ const MatchListScreen: React.FC = () => {
           </View>
         }
       />
-
     </SafeAreaView>
   );
 };
