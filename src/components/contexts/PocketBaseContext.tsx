@@ -1,62 +1,57 @@
 import React, { createContext, useContext, useEffect } from 'react';
 import PocketBase from 'pocketbase';
-import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
-// Конфигурация URL для разных окружений
+// Читаем базовый URL из expo.extra (app.json)
 const getServerURL = () => {
-  // В режиме разработки (Expo Go)
-  if (__DEV__) {
-    return 'http://xn--d1aigb4b.xn--p1ai:8090';
-  }
-
-  // В production APK - используем HTTPS или проверенный HTTP
-  // Замените на ваш реальный production URL
-  return 'http://xn--d1aigb4b.xn--p1ai:8090';
+  const extra = (Constants?.expoConfig as any)?.extra || {};
+  const url = extra.apiBaseUrl as string | undefined;
+  return url || 'http://xn--d1aigb4b.xn--p1ai:8090';
 };
 
 const PB_URL = getServerURL();
 
-console.log('🏗️ [PocketBase] Инициализация PocketBase с URL:', PB_URL);
-console.log('🔧 [PocketBase] Режим разработки:', __DEV__);
-console.log('📱 [PocketBase] Платформа:', Platform.OS);
+if (__DEV__) {
+  console.log('🏗️ [PocketBase] Инициализация PocketBase с URL:', PB_URL);
+}
 
 const pb = new PocketBase(PB_URL);
 
-// Настройка таймаутов для лучшей обработки сетевых ошибок
+// Настройка логирования запросов (только dev)
 pb.beforeSend = function (url, options) {
-  // Устанавливаем таймаут для запросов
-  options.timeout = 10000; // 10 секунд
-
-  console.log('🌐 [PocketBase] Отправляем запрос:', {
-    url: url,
-    method: options.method || 'GET',
-    timeout: options.timeout
-  });
+  if (__DEV__) {
+    console.log('🌐 [PocketBase] Отправляем запрос:', {
+      url: url,
+      method: options.method || 'GET',
+    });
+  }
 
   return { url, options };
 };
 
-// Добавляем обработку ошибок
 pb.afterSend = function (response, data) {
-  console.log('📡 [PocketBase] Ответ получен:', {
-    status: response.status,
-    ok: response.ok,
-    url: response.url
-  });
+  if (__DEV__) {
+    console.log('📡 [PocketBase] Ответ получен:', {
+      status: response.status,
+      ok: response.ok,
+      url: response.url,
+    });
+  }
 
   return data;
 };
 
-// Добавляем слушатель изменений authStore для дебага
-pb.authStore.onChange((token, model) => {
-  console.log('🔄 [PocketBase] AuthStore изменился:', {
-    hasToken: !!token,
-    hasModel: !!model,
-    isValid: pb.authStore.isValid,
-    modelType: model?.collectionName || 'unknown'
+// Логи authStore только в dev
+if (__DEV__) {
+  pb.authStore.onChange((token, model) => {
+    console.log('🔄 [PocketBase] AuthStore изменился:', {
+      hasToken: !!token,
+      hasModel: !!model,
+      isValid: pb.authStore.isValid,
+      modelType: model?.collectionName || 'unknown',
+    });
   });
-});
+}
 
 const PocketBaseContext = createContext<PocketBase | undefined>(undefined);
 
@@ -65,25 +60,28 @@ export const PocketBaseProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     // Проверяем доступность сервера при инициализации
     const checkServerHealth = async () => {
       try {
-        console.log('🔍 [PocketBase] Проверяем доступность сервера...');
+        if (__DEV__) {
+          console.log('🔍 [PocketBase] Проверяем доступность сервера...');
+        }
 
-        // Простой запрос для проверки доступности
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 5000);
+
         const response = await fetch(PB_URL + '/api/health', {
           method: 'GET',
-          timeout: 5000,
+          signal: controller.signal,
         });
 
-        if (response.ok) {
-          console.log('✅ [PocketBase] Сервер доступен');
-        } else {
-          console.warn('⚠️ [PocketBase] Сервер отвечает с ошибкой:', response.status);
+        clearTimeout(timer);
+
+        if (__DEV__) {
+          console.log(response.ok ? '✅ [PocketBase] Сервер доступен' : `⚠️ [PocketBase] Сервер отвечает с ошибкой: ${response.status}`);
         }
       } catch (error) {
-        console.error('❌ [PocketBase] Сервер недоступен:', error);
-        console.error('🔧 [PocketBase] Проверьте:');
-        console.error('   1. Интернет соединение');
-        console.error('   2. URL сервера:', PB_URL);
-        console.error('   3. Доступность сервера извне');
+        if (__DEV__) {
+          console.error('❌ [PocketBase] Сервер недоступен:', error);
+          console.error('🔧 [PocketBase] Проверьте URL сервера:', PB_URL);
+        }
       }
     };
 
