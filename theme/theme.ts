@@ -240,16 +240,16 @@ export const globalStyles = StyleSheet.create({
     color: colors.mutedForeground,
   },
   statusLive: {
-    backgroundColor: '#1a1a1a',
+    backgroundColor: '#222222',
   },
   statusFinished: {
-    backgroundColor: '#111111',
+    backgroundColor: '#222222',
   },
   statusUpcoming: {
     backgroundColor: '#222222',
   },
   statusCancelled: {
-    backgroundColor: '#0a0a0a',
+    backgroundColor: '#222222',
   },
 
   // List styles
