@@ -9,12 +9,17 @@ import {
 import {
   ActivityIndicator,
   Text,
+  Modal,
+  Portal,
+  Button,
+  TextInput,
+  RadioButton,
 } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { usePocketBase } from '../contexts/PocketBaseContext';
 import { useAuth } from '../contexts/AuthContext';
-import { Match } from '../types';
+import { Match, MatchStatus } from '../types';
 import MatchCard from '../MatchCard';
 import { globalStyles, colors } from '../../../theme/theme';
 import { ApiError } from '../types';
@@ -27,6 +32,14 @@ const MatchListScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [statusFilter, setStatusFilter] = useState<'live' | 'upcoming' | 'completed' | 'cancelled'>('upcoming');
+
+  // Modal state
+  const [editVisible, setEditVisible] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
+  const [editStatus, setEditStatus] = useState<MatchStatus>('completed');
+  const [homeScore, setHomeScore] = useState<string>('0');
+  const [awayScore, setAwayScore] = useState<string>('0');
 
   // Используем ref для отслеживания монтирования компонента
   const isMounted = useRef(true);
@@ -223,6 +236,60 @@ const MatchListScreen: React.FC = () => {
     );
   };
 
+  // Handlers for editing
+  const openEdit = (match: Match) => {
+    if (statusFilter !== 'completed') return; // редактирование только в фильтре completed
+    setSelectedMatch(match);
+    setEditStatus(match.status);
+    setHomeScore(match.home_score !== undefined ? String(match.home_score) : '0');
+    setAwayScore(match.away_score !== undefined ? String(match.away_score) : '0');
+    setEditVisible(true);
+  };
+
+  const closeEdit = () => {
+    if (editing) return;
+    setEditVisible(false);
+    setSelectedMatch(null);
+  };
+
+  const saveEdit = async () => {
+    if (!selectedMatch) return;
+    // Валидация: счет можно менять только если статус completed
+    if (editStatus !== 'completed') {
+      // При смене статуса на не-completed обнулять счет? Оставим как есть, но не даем вводить
+    }
+
+    // Валидация чисел
+    const hs = Number(homeScore);
+    const as = Number(awayScore);
+    if (editStatus === 'completed') {
+      if (!Number.isFinite(hs) || hs < 0 || !Number.isFinite(as) || as < 0) {
+        Alert.alert('Ошибка', 'Счет должен быть неотрицательными числами');
+        return;
+      }
+    }
+
+    try {
+      setEditing(true);
+      const payload: Partial<Match> = { status: editStatus } as Partial<Match>;
+      if (editStatus === 'completed') {
+        Object.assign(payload, { home_score: hs, away_score: as });
+      }
+
+      await pb.collection('matches').update<Match>(selectedMatch.id, payload);
+
+      // Обновляем локальный список оптимистично
+      setMatches((prev) => prev.map((m) => (m.id === selectedMatch.id ? { ...m, ...payload } as Match : m)));
+      setSelectedMatch({ ...selectedMatch, ...payload } as Match);
+      setEditVisible(false);
+    } catch (error: unknown) {
+      const apiError = error as ApiError;
+      Alert.alert('Ошибка сохранения', apiError.message || 'Не удалось сохранить изменения');
+    } finally {
+      setEditing(false);
+    }
+  };
+
   if (loading) {
     return (
       <View style={globalStyles.loadingContainer}>
@@ -283,7 +350,7 @@ const MatchListScreen: React.FC = () => {
         renderItem={({ item, index }) => (
           <MatchCard
             match={item}
-            onPress={() => {}}
+            onPress={() => openEdit(item)}
             index={index}
           />
         )}
@@ -303,6 +370,57 @@ const MatchListScreen: React.FC = () => {
           </View>
         }
       />
+
+      {/* Edit Modal */}
+      <Portal>
+        <Modal visible={editVisible} onDismiss={closeEdit} contentContainerStyle={{ backgroundColor: '#0b0b0b', padding: 16, margin: 16, borderWidth: 1, borderColor: '#222' }}>
+          <Text style={{ color: '#fff', fontSize: 16, marginBottom: 12 }}>Редактирование матча</Text>
+          {selectedMatch && (
+            <View>
+              <Text style={{ color: '#9ca3af', marginBottom: 8 }}>{selectedMatch.home_team} vs {selectedMatch.away_team}</Text>
+
+              {/* Статус */}
+              <Text style={{ color: '#fff', marginTop: 8, marginBottom: 4 }}>Статус</Text>
+              <RadioButton.Group onValueChange={(value) => setEditStatus(value as MatchStatus)} value={editStatus}>
+                {(['upcoming', 'live', 'completed', 'cancelled'] as const).map((st) => (
+                  <View key={st} style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <RadioButton value={st} />
+                    <Text style={{ color: '#fff' }}>{st}</Text>
+                  </View>
+                ))}
+              </RadioButton.Group>
+
+              {/* Счет: только если completed */}
+              <Text style={{ color: '#fff', marginTop: 12, marginBottom: 4 }}>Счет (только для завершенных)</Text>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <TextInput
+                  mode="outlined"
+                  label="Домашние"
+                  value={homeScore}
+                  onChangeText={setHomeScore}
+                  keyboardType="number-pad"
+                  disabled={editStatus !== 'completed'}
+                  style={{ flex: 1 }}
+                />
+                <TextInput
+                  mode="outlined"
+                  label="Гости"
+                  value={awayScore}
+                  onChangeText={setAwayScore}
+                  keyboardType="number-pad"
+                  disabled={editStatus !== 'completed'}
+                  style={{ flex: 1 }}
+                />
+              </View>
+
+              <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 16, gap: 8 }}>
+                <Button onPress={closeEdit} disabled={editing}>Отмена</Button>
+                <Button mode="contained" onPress={saveEdit} loading={editing} disabled={editing}>Сохранить</Button>
+              </View>
+            </View>
+          )}
+        </Modal>
+      </Portal>
     </SafeAreaView>
   );
 };
