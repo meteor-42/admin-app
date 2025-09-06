@@ -7,7 +7,6 @@ export interface Match {
   starts_at: string;
   status: 'upcoming' | 'live' | 'completed' | 'cancelled';
   home_score?: number;
-  away_score?: number;
 }
 
 export interface User {
