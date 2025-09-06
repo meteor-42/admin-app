@@ -5,6 +5,8 @@ import {
   RefreshControl,
   Alert,
   TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import {
   ActivityIndicator,
@@ -252,6 +254,11 @@ const MatchListScreen: React.FC = () => {
     setSelectedMatch(null);
   };
 
+  // Enable swipe-to-dismiss like behavior by allowing tap on backdrop and vertical drag hint
+  const onDismissRequest = () => {
+    if (!editing) closeEdit();
+  };
+
   const saveEdit = async () => {
     if (!selectedMatch) return;
     // Валидация: счет можно менять только если статус completed
@@ -373,52 +380,84 @@ const MatchListScreen: React.FC = () => {
 
       {/* Edit Modal */}
       <Portal>
-        <Modal visible={editVisible} onDismiss={closeEdit} contentContainerStyle={{ backgroundColor: '#0b0b0b', padding: 16, margin: 16, borderWidth: 1, borderColor: '#222' }}>
-          <Text style={{ color: '#fff', fontSize: 16, marginBottom: 12 }}>Редактирование матча</Text>
-          {selectedMatch && (
-            <View>
-              <Text style={{ color: '#9ca3af', marginBottom: 8 }}>{selectedMatch.home_team} vs {selectedMatch.away_team}</Text>
+        <Modal
+          visible={editVisible}
+          onDismiss={onDismissRequest}
+          dismissable
+          dismissableBackButton
+          contentContainerStyle={{
+            backgroundColor: '#0a0a0a',
+            borderColor: '#1f1f1f',
+            borderWidth: 1,
+            padding: 16,
+            marginHorizontal: 16,
+            marginVertical: 24,
+            borderRadius: 12,
+          }}
+        >
+          {/* Handle area for swipe affordance */}
+          <View style={{ alignItems: 'center', marginBottom: 12 }}>
+            <View style={{ height: 4, width: 44, borderRadius: 2, backgroundColor: '#2a2a2a' }} />
+          </View>
+          <KeyboardAvoidingView behavior={Platform.select({ ios: 'padding', android: undefined })}>
+            <Text style={{ color: '#fff', fontSize: 18, fontWeight: '600', marginBottom: 8 }}>Редактирование матча</Text>
+            {selectedMatch && (
+              <View>
+                <Text style={{ color: '#9ca3af', marginBottom: 12 }}>
+                  {selectedMatch.home_team} <Text style={{ color: '#6b7280' }}>vs</Text> {selectedMatch.away_team}
+                </Text>
 
-              {/* Статус */}
-              <Text style={{ color: '#fff', marginTop: 8, marginBottom: 4 }}>Статус</Text>
-              <RadioButton.Group onValueChange={(value) => setEditStatus(value as MatchStatus)} value={editStatus}>
-                {(['upcoming', 'live', 'completed', 'cancelled'] as const).map((st) => (
-                  <View key={st} style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <RadioButton value={st} />
-                    <Text style={{ color: '#fff' }}>{st}</Text>
-                  </View>
-                ))}
-              </RadioButton.Group>
+                {/* Статус */}
+                <Text style={{ color: '#e5e7eb', marginTop: 4, marginBottom: 6, fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.6 }}>Статус</Text>
+                <RadioButton.Group onValueChange={(value) => setEditStatus(value as MatchStatus)} value={editStatus}>
+                  {(['upcoming', 'live', 'completed', 'cancelled'] as const).map((st) => (
+                    <View key={st} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 2 }}>
+                      <RadioButton value={st} color="#fff" />
+                      <Text style={{ color: '#d1d5db', fontSize: 14 }}>{st}</Text>
+                    </View>
+                  ))}
+                </RadioButton.Group>
 
-              {/* Счет: только если completed */}
-              <Text style={{ color: '#fff', marginTop: 12, marginBottom: 4 }}>Счет (только для завершенных)</Text>
-              <View style={{ flexDirection: 'row', gap: 8 }}>
-                <TextInput
-                  mode="outlined"
-                  label="Домашние"
-                  value={homeScore}
-                  onChangeText={setHomeScore}
-                  keyboardType="number-pad"
-                  disabled={editStatus !== 'completed'}
-                  style={{ flex: 1 }}
-                />
-                <TextInput
-                  mode="outlined"
-                  label="Гости"
-                  value={awayScore}
-                  onChangeText={setAwayScore}
-                  keyboardType="number-pad"
-                  disabled={editStatus !== 'completed'}
-                  style={{ flex: 1 }}
-                />
+                {/* Счет: только если completed */}
+                <Text style={{ color: '#e5e7eb', marginTop: 12, marginBottom: 6, fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.6 }}>Счет (только для завершенных)</Text>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <TextInput
+                    mode="flat"
+                    label="Домашние"
+                    value={homeScore}
+                    onChangeText={setHomeScore}
+                    keyboardType="number-pad"
+                    disabled={editStatus !== 'completed'}
+                    style={{ flex: 1, backgroundColor: '#0f0f0f' }}
+                    underlineColor="#2a2a2a"
+                    textColor="#ffffff"
+                    theme={{ colors: { primary: '#ffffff', onSurfaceVariant: '#9ca3af' } }}
+                  />
+                  <TextInput
+                    mode="flat"
+                    label="Гости"
+                    value={awayScore}
+                    onChangeText={setAwayScore}
+                    keyboardType="number-pad"
+                    disabled={editStatus !== 'completed'}
+                    style={{ flex: 1, backgroundColor: '#0f0f0f' }}
+                    underlineColor="#2a2a2a"
+                    textColor="#ffffff"
+                    theme={{ colors: { primary: '#ffffff', onSurfaceVariant: '#9ca3af' } }}
+                  />
+                </View>
+
+                <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 18, gap: 8 }}>
+                  <Button onPress={closeEdit} disabled={editing} textColor="#e5e7eb">
+                    Отмена
+                  </Button>
+                  <Button mode="contained" onPress={saveEdit} loading={editing} disabled={editing} style={{ backgroundColor: '#111111' }}>
+                    Сохранить
+                  </Button>
+                </View>
               </View>
-
-              <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 16, gap: 8 }}>
-                <Button onPress={closeEdit} disabled={editing}>Отмена</Button>
-                <Button mode="contained" onPress={saveEdit} loading={editing} disabled={editing}>Сохранить</Button>
-              </View>
-            </View>
-          )}
+            )}
+          </KeyboardAvoidingView>
         </Modal>
       </Portal>
     </SafeAreaView>
