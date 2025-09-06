@@ -60,7 +60,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onPress, index }) => {
     }
   };
 
-  const isCompleted =  match.status === 'live';
+  const isCompleted = match.status === 'completed';
 
   return (
     <TouchableOpacity
@@ -72,8 +72,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onPress, index }) => {
       <View
         style={{
           backgroundColor: '#2B2B2B',
-          paddingHorizontal: 3,
-          paddingVertical: 6,
+          paddingHorizontal: 0,
           justifyContent: 'center',
           alignItems: 'center',
         }}
@@ -82,7 +81,7 @@ const MatchCard: React.FC<MatchCardProps> = ({ match, onPress, index }) => {
           style={{
             color: '#A1A1AA',
             transform: [{ rotate: '-90deg' }],
-            fontSize: 9,
+            fontSize: 12,
           }}
         >
           {(index !== undefined ? `${index + 1}` : '') + (match.id ? ` • ${match.id}` : '')}
