@@ -5,7 +5,7 @@ export interface Match {
   home_team: string;
   away_team: string;
   starts_at: string;
-  status: 'upcoming' | 'live' | 'finished' | 'cancelled';
+  status: 'upcoming' | 'live' | 'completed' | 'cancelled';
   home_score?: number;
   away_score?: number;
   odd_home?: number;
@@ -26,4 +26,4 @@ export interface AuthState {
   isLoading: boolean;
 }
 
-export type MatchStatus = 'upcoming' | 'live' | 'finished' | 'cancelled';
+export type MatchStatus = 'upcoming' | 'live' | 'completed' | 'cancelled';
