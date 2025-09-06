@@ -42,6 +42,9 @@
           "buildType": "aab"
         }
       }
+    },
+    "extra": {
+      "apiBaseUrl": "http://xn--d1aigb4b.xn--p1ai:8090"
     }
   }
 }
