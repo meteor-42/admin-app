@@ -58,7 +58,7 @@ export const colors = {
   status: {
     live: '#18181B',
     upcoming: '#71717A',
-    finished: '#A1A1AA',
+    completed: '#A1A1AA',
     cancelled: '#D4D4D8',
   }
 };
@@ -240,16 +240,16 @@ export const globalStyles = StyleSheet.create({
     color: colors.mutedForeground,
   },
   statusLive: {
-    backgroundColor: '#222222',
+    backgroundColor: colors.status.live,
   },
   statusFinished: {
-    backgroundColor: '#222222',
+    backgroundColor: colors.status.completed,
   },
   statusUpcoming: {
-    backgroundColor: '#222222',
+    backgroundColor: colors.status.upcoming,
   },
   statusCancelled: {
-    backgroundColor: '#222222',
+    backgroundColor: colors.status.cancelled,
   },
 
   // List styles
