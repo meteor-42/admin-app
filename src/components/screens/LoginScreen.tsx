@@ -31,8 +31,10 @@ const LoginScreen: React.FC = () => {
 
   useEffect(() => {
     if (user && !hasNavigated.current) {
-      console.log('🚀 [LoginScreen] Пользователь авторизован, переходим к списку матчей');
-      console.log(`👤 [LoginScreen] Данные пользователя: ${user.email}`);
+      if (__DEV__) {
+        console.warn('🚀 [LoginScreen] Пользователь авторизован, переходим к списку матчей');
+        console.warn(`👤 [LoginScreen] Данные пользователя: ${user.email}`);
+      }
 
       // Устанавливаем флаг, чтобы предотвратить повторную навигацию
       hasNavigated.current = true;
@@ -48,40 +50,40 @@ const LoginScreen: React.FC = () => {
   }, [user, navigation]);
 
   const handleLogin = async () => {
-    console.log('🔐 [LoginScreen] Пользователь нажал кнопку входа');
+    if (__DEV__) console.warn('🔐 [LoginScreen] Пользователь нажал кнопку входа');
 
     if (!email || !password) {
-      console.log('⚠️ [LoginScreen] Пустые поля email или пароль');
+      if (__DEV__) console.warn('⚠️ [LoginScreen] Пустые поля email или пароль');
       Alert.alert('Ошибка', 'Введите email и пароль');
       return;
     }
 
     // Предотвращаем повторные нажатия
     if (loading) {
-      console.log('⏸️ [LoginScreen] Уже идет авторизация, пропускаем');
+      if (__DEV__) console.warn('⏸️ [LoginScreen] Уже идет авторизация, пропускаем');
       return;
     }
 
-    console.log('🔄 [LoginScreen] Начинаем процесс авторизации');
+    if (__DEV__) console.warn('🔄 [LoginScreen] Начинаем процесс авторизации');
     setLoading(true);
     try {
       await login(email, password);
-      console.log('✅ [LoginScreen] Авторизация завершена успешно');
+      if (__DEV__) console.warn('✅ [LoginScreen] Авторизация завершена успешно');
       // Не сбрасываем loading здесь, так как будет переход на другой экран
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ [LoginScreen] Ошибка авторизации:', error);
 
       // Более детальная обработка ошибок
       let errorMessage = 'Неправильный email или пароль';
 
-      if (error?.status === 0 || error?.message?.includes('Network')) {
+      if ((error as any)?.status === 0 || (error as any)?.message?.includes('Network')) {
         errorMessage = 'Проблема с сетью. Проверьте интернет соединение.';
-      } else if (error?.status === 400) {
+      } else if ((error as any)?.status === 400) {
         errorMessage = 'Неверный email или пароль';
-      } else if (error?.status >= 500) {
+      } else if ((error as any)?.status >= 500) {
         errorMessage = 'Сервер временно недоступен. Попробуйте позже.';
-      } else if (error?.message) {
-        errorMessage = error.message;
+      } else if ((error as any)?.message) {
+        errorMessage = (error as any).message;
       }
 
       Alert.alert('Ошибка входа', errorMessage);

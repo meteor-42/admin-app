@@ -3,8 +3,8 @@ import PocketBase from 'pocketbase';
 import Constants from 'expo-constants';
 
 // Читаем базовый URL из expo.extra (app.json)
-const getServerURL = () => {
-  const extra = (Constants?.expoConfig as any)?.extra || {};
+const getServerURL = (): string => {
+  const extra = (Constants?.expoConfig as unknown as { extra?: { apiBaseUrl?: string } })?.extra || {};
   const url = extra.apiBaseUrl as string | undefined;
   return url || 'http://xn--d1aigb4b.xn--p1ai:8090';
 };
@@ -12,7 +12,7 @@ const getServerURL = () => {
 const PB_URL = getServerURL();
 
 if (__DEV__) {
-  console.log('🏗️ [PocketBase] Инициализация PocketBase с URL:', PB_URL);
+  console.warn('🏗️ [PocketBase] Инициализация PocketBase с URL:', PB_URL);
 }
 
 const pb = new PocketBase(PB_URL);
@@ -20,7 +20,7 @@ const pb = new PocketBase(PB_URL);
 // Настройка логирования запросов (только dev)
 pb.beforeSend = function (url, options) {
   if (__DEV__) {
-    console.log('🌐 [PocketBase] Отправляем запрос:', {
+    console.warn('🌐 [PocketBase] Отправляем запрос:', {
       url: url,
       method: options.method || 'GET',
     });
@@ -31,7 +31,7 @@ pb.beforeSend = function (url, options) {
 
 pb.afterSend = function (response, data) {
   if (__DEV__) {
-    console.log('📡 [PocketBase] Ответ получен:', {
+    console.warn('📡 [PocketBase] Ответ получен:', {
       status: response.status,
       ok: response.ok,
       url: response.url,
@@ -44,7 +44,7 @@ pb.afterSend = function (response, data) {
 // Логи authStore только в dev
 if (__DEV__) {
   pb.authStore.onChange((token, model) => {
-    console.log('🔄 [PocketBase] AuthStore изменился:', {
+    console.warn('🔄 [PocketBase] AuthStore изменился:', {
       hasToken: !!token,
       hasModel: !!model,
       isValid: pb.authStore.isValid,
@@ -61,7 +61,7 @@ export const PocketBaseProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     const checkServerHealth = async () => {
       try {
         if (__DEV__) {
-          console.log('🔍 [PocketBase] Проверяем доступность сервера...');
+          console.warn('🔍 [PocketBase] Проверяем доступность сервера...');
         }
 
         const controller = new AbortController();
@@ -75,7 +75,7 @@ export const PocketBaseProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         clearTimeout(timer);
 
         if (__DEV__) {
-          console.log(response.ok ? '✅ [PocketBase] Сервер доступен' : `⚠️ [PocketBase] Сервер отвечает с ошибкой: ${response.status}`);
+          console.warn(response.ok ? '✅ [PocketBase] Сервер доступен' : `⚠️ [PocketBase] Сервер отвечает с ошибкой: ${response.status}`);
         }
       } catch (error) {
         if (__DEV__) {
