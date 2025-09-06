@@ -15,7 +15,7 @@ import {
   Portal,
   Button,
   TextInput,
-  RadioButton,
+  Menu,
 } from 'react-native-paper';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -42,6 +42,7 @@ const MatchListScreen: React.FC = () => {
   const [editStatus, setEditStatus] = useState<MatchStatus>('completed');
   const [homeScore, setHomeScore] = useState<string>('0');
   const [awayScore, setAwayScore] = useState<string>('0');
+  const [statusMenuVisible, setStatusMenuVisible] = useState(false);
 
   // Используем ref для отслеживания монтирования компонента
   const isMounted = useRef(true);
@@ -240,7 +241,7 @@ const MatchListScreen: React.FC = () => {
 
   // Handlers for editing
   const openEdit = (match: Match) => {
-    if (statusFilter !== 'completed') return; // редактирование только в фильтре completed
+    // Редактирование разрешено для любого текущего фильтра
     setSelectedMatch(match);
     setEditStatus(match.status);
     setHomeScore(match.home_score !== undefined ? String(match.home_score) : '0');
@@ -407,16 +408,40 @@ const MatchListScreen: React.FC = () => {
                   {selectedMatch.home_team} <Text style={{ color: '#6b7280' }}>vs</Text> {selectedMatch.away_team}
                 </Text>
 
-                {/* Статус */}
+                {/* Статус (dropdown) */}
                 <Text style={{ color: '#e5e7eb', marginTop: 4, marginBottom: 6, fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.6 }}>Статус</Text>
-                <RadioButton.Group onValueChange={(value) => setEditStatus(value as MatchStatus)} value={editStatus}>
-                  {(['upcoming', 'live', 'completed', 'cancelled'] as const).map((st) => (
-                    <View key={st} style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 2 }}>
-                      <RadioButton value={st} color="#fff" />
-                      <Text style={{ color: '#d1d5db', fontSize: 14 }}>{st}</Text>
-                    </View>
-                  ))}
-                </RadioButton.Group>
+                <View style={{ alignSelf: 'stretch' }}>
+                  <Menu
+                    visible={statusMenuVisible}
+                    onDismiss={() => setStatusMenuVisible(false)}
+                    anchor={
+                      <TouchableOpacity
+                        onPress={() => setStatusMenuVisible(true)}
+                        activeOpacity={0.7}
+                        style={{
+                          borderWidth: 1,
+                          borderColor: '#1f1f1f',
+                          backgroundColor: '#0f0f0f',
+                          paddingHorizontal: 12,
+                          paddingVertical: 12,
+                          borderRadius: 8,
+                        }}
+                      >
+                        <Text style={{ color: '#d1d5db', fontSize: 14 }}>{editStatus}</Text>
+                      </TouchableOpacity>
+                    }
+                    contentStyle={{ backgroundColor: '#0a0a0a' }}
+                  >
+                    {(['upcoming', 'live', 'completed', 'cancelled'] as const).map((st) => (
+                      <Menu.Item
+                        key={st}
+                        onPress={() => { setEditStatus(st); setStatusMenuVisible(false); }}
+                        title={st}
+                        titleStyle={{ color: '#e5e7eb' }}
+                      />)
+                    )}
+                  </Menu>
+                </View>
 
                 {/* Счет: только если completed */}
                 <Text style={{ color: '#e5e7eb', marginTop: 12, marginBottom: 6, fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.6 }}>Счет (только для завершенных)</Text>
