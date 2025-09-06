@@ -56,7 +56,7 @@ const MatchListScreen: React.FC = () => {
       isMounted.current = false;
       clearTimeout(timeoutId);
     };
-  }, []);
+  }, [loadMatches, pb.authStore.isValid, pb.authStore.token]);
 
   // Перезагрузка при смене фильтра
   useEffect(() => {
@@ -136,22 +136,23 @@ const MatchListScreen: React.FC = () => {
       }
 
       setMatches(records);
-    } catch (error: any) {
+    } catch (error: unknown) {
       if (!isMounted.current) return;
 
       console.error(`❌ [loadMatches] Ошибка на попытке ${attempt}:`, error);
       if (__DEV__) {
         console.warn(`🔍 [loadMatches] Детали ошибки:`, {
-          message: error?.message,
-          status: error?.status,
-          data: error?.data,
-          url: error?.url,
+          message: (error as any)?.message,
+          status: (error as any)?.status,
+          data: (error as any)?.data,
+          url: (error as any)?.url,
         });
       }
 
       // Определяем тип ошибки для лучшего retry
-      const isNetworkError = error?.status === 0 || error?.message?.includes('Network') || error?.message?.includes('timeout');
-      const isServerError = error?.status >= 500;
+      const isNetworkError = (error as any)?.status === 0 || (error as any)?.message?.includes('Network') || (error as any)?.message?.includes('timeout');
+      const isServerError = (error as any)?.status >= 500;
+
       const shouldRetry = isNetworkError || isServerError;
 
       if (attempt < maxAttempts && shouldRetry && isMounted.current) {
@@ -172,12 +173,12 @@ const MatchListScreen: React.FC = () => {
         let errorMessage = 'Неизвестная ошибка';
         if (isNetworkError) {
           errorMessage = 'Проблема с сетью. Проверьте интернет соединение.';
-        } else if (error?.status === 401) {
+        } else if ((error as any)?.status === 401) {
           errorMessage = 'Ошибка авторизации. Попробуйте войти заново.';
-        } else if (error?.status >= 500) {
+        } else if ((error as any)?.status >= 500) {
           errorMessage = 'Сервер временно недоступен. Попробуйте позже.';
-        } else if (error?.message) {
-          errorMessage = error.message;
+        } else if ((error as any)?.message) {
+          errorMessage = (error as any).message;
         }
 
         Alert.alert('Ошибка загрузки', errorMessage);
